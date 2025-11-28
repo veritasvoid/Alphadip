@@ -84,24 +84,91 @@
             opacity: 0.16;
         }
 
-        .nav-container,
         .container {
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
         }
 
-        /* Nav container visually in header band */
-        .nav-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            position: relative;
-            z-index: 5;
-            margin-bottom: -10px; /* pull into header area */
+        /* ---------- TOP BAR: DATE (LEFT) + NAV TABS (RIGHT) ---------- */
+        .top-bar {
+            width: 100%;
+            margin-bottom: 22px;
         }
 
-        /* Navigation */
+        .top-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .date-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(24px);
+            box-shadow:
+                0 18px 40px rgba(0, 0, 0, 0.75),
+                0 0 0 1px rgba(255, 255, 255, 0.02);
+        }
+
+        .date-section::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(120deg, rgba(0, 212, 255, 0.5), rgba(0, 255, 136, 0.1), transparent 40%);
+            opacity: 0.35;
+            z-index: -1;
+        }
+
+        .date-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .date-section label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .date-section input[type="date"] {
+            font-family: 'JetBrains Mono', monospace;
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(118, 129, 196, 0.85);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition:
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                background var(--transition-fast),
+                transform var(--transition-fast);
+        }
+
+        .date-section input[type="date"]:hover,
+        .date-section input[type="date"]:focus-visible {
+            border-color: var(--accent-cyan);
+            outline: none;
+            background: radial-gradient(circle at top, rgba(0, 212, 255, 0.15), rgba(13, 16, 41, 1));
+            box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.4);
+            transform: translateY(-0.5px);
+        }
+
+        /* Navigation tabs (moved into right side of top bar) */
         .nav-tabs {
             display: flex;
             gap: 8px;
@@ -120,7 +187,7 @@
             border-radius: 999px;
             border: none;
             background: transparent;
-            color: var(--text-secondary);
+            color: #c7d7ff; /* more readable default text */
             font-family: 'Space Grotesk', sans-serif;
             font-size: 0.9rem;
             font-weight: 500;
@@ -137,14 +204,15 @@
         }
 
         .nav-tab:hover {
-            color: var(--text-primary);
+            color: #f5f7ff;
             background: rgba(22, 28, 68, 0.86);
             transform: translateY(-1px);
         }
 
         .nav-tab.active {
             background: radial-gradient(circle at top left, rgba(0, 212, 255, 0.18), rgba(0, 255, 136, 0.1));
-            color: #020617;
+            color: #f7fcff; /* brighter active text for readability */
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
             box-shadow:
                 0 6px 22px rgba(0, 212, 255, 0.6),
                 0 0 0 1px rgba(0, 255, 136, 0.3);
@@ -152,7 +220,8 @@
 
         .nav-tab.active.insider {
             background: radial-gradient(circle at top left, rgba(168, 85, 247, 0.85), rgba(0, 212, 255, 0.2));
-            color: #020617;
+            color: #f7fcff;
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
             box-shadow:
                 0 6px 22px rgba(168, 85, 247, 0.45),
                 0 0 0 1px rgba(0, 212, 255, 0.25);
@@ -162,12 +231,6 @@
             text-align: left;
             margin-bottom: 30px;
             position: relative;
-        }
-
-        /* Push headers down slightly so they share band with nav */
-        #page-comparison .container > header,
-        #page-insider .container > header {
-            margin-top: 20px;
         }
 
         header::after {
@@ -209,65 +272,6 @@
             grid-template-columns: 1.2fr 1fr;
             gap: 22px;
             margin-bottom: 26px;
-        }
-
-        .date-section {
-            grid-column: 1 / -1;
-            display: flex;
-            align-items: center;
-            justify-content: center;  /* center label + input */
-            gap: 16px;
-            padding: 18px 20px;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(24px);
-            box-shadow:
-                0 18px 40px rgba(0, 0, 0, 0.75),
-                0 0 0 1px rgba(255, 255, 255, 0.02);
-        }
-
-        .date-section::before {
-            content: "";
-            position: absolute;
-            inset: -1px;
-            border-radius: inherit;
-            background: linear-gradient(120deg, rgba(0, 212, 255, 0.5), rgba(0, 255, 136, 0.1), transparent 40%);
-            opacity: 0.35;
-            z-index: -1;
-        }
-
-        .date-section label {
-            font-weight: 500;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .date-section input[type="date"] {
-            font-family: 'JetBrains Mono', monospace;
-            padding: 10px 16px;
-            background: var(--bg-tertiary);
-            border: 1px solid rgba(118, 129, 196, 0.85);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition:
-                border-color var(--transition-fast),
-                box-shadow var(--transition-fast),
-                background var(--transition-fast),
-                transform var(--transition-fast);
-        }
-
-        .date-section input[type="date"]:hover,
-        .date-section input[type="date"]:focus-visible {
-            border-color: var(--accent-cyan);
-            outline: none;
-            background: radial-gradient(circle at top, rgba(0, 212, 255, 0.15), rgba(13, 16, 41, 1));
-            box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.4);
-            transform: translateY(-0.5px);
         }
 
         .data-box {
@@ -543,8 +547,6 @@
                 transform var(--transition-fast),
                 box-shadow var(--transition-fast);
         }
-
-        /* We override background via inline style for date colors, so row striping is less important now */
 
         td {
             padding: 11px 16px;
@@ -859,22 +861,17 @@
                 padding: 18px 14px 22px;
             }
 
-            .nav-container {
+            .top-bar-inner {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 10px;
-                margin-bottom: 0;
+            }
+
+            .date-section {
+                width: 100%;
             }
 
             .nav-tabs {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .nav-tab {
-                flex: 1;
-                justify-content: center;
-                padding-inline: 10px;
+                align-self: flex-end;
             }
 
             header {
@@ -909,15 +906,23 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <div class="nav-container">
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showPage('comparison')" id="tab-comparison">
-                📊 Stock Comparison
-            </button>
-            <button class="nav-tab insider" onclick="showPage('insider')" id="tab-insider">
-                🕵️ Insider Tracking
-            </button>
+    <!-- Top bar: Data Date (left) + Nav tabs (right) -->
+    <div class="top-bar">
+        <div class="container top-bar-inner">
+            <div class="date-section">
+                <div class="date-left">
+                    <label for="dataDate">📅 Data Date:</label>
+                    <input type="date" id="dataDate">
+                </div>
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="showPage('comparison')" id="tab-comparison">
+                        📊 Stock Comparison
+                    </button>
+                    <button class="nav-tab insider" onclick="showPage('insider')" id="tab-insider">
+                        🕵️ Insider Tracking
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -930,11 +935,7 @@
             </header>
 
             <div class="input-section">
-                <div class="date-section">
-                    <label for="dataDate">📅 Data Date:</label>
-                    <input type="date" id="dataDate">
-                </div>
-                
+                <!-- date-section moved to top bar -->
                 <div class="data-box">
                     <h3>Data Set 1</h3>
                     <textarea id="dataset1" placeholder="Paste your first data set here...&#10;Example: ABR ARBOR RLTY TR INC REIT 8.52 0.6 2,883,059 1,667 MACM AECOM 103.52..."></textarea>
@@ -1116,15 +1117,16 @@
         let parsedData = [];
         let rowIdCounter = 0;
 
-        // Pastel colors for date grouping
+        // Darker colors for date grouping (more distinguishable)
         const pastelColors = [
-            '#6b5a5a', '#6b635a', '#6b6b5a',
-            '#5a6b5f', '#5a6b6b', '#5a636b',
-            '#5a5a6b', '#625a6b', '#6b5a6b',
-            '#6b5a62', '#636b5a', '#5a6b63',
-            '#6b625a', '#675a6b', '#5a626b',
-            '#6b695a', '#5a6b5a', '#6b5a5a',
-            '#5a696b', '#695a6b',
+            'rgba(16, 24, 60, 0.92)',
+            'rgba(24, 22, 58, 0.92)',
+            'rgba(18, 30, 72, 0.92)',
+            'rgba(30, 26, 70, 0.92)',
+            'rgba(20, 30, 52, 0.92)',
+            'rgba(32, 20, 56, 0.92)',
+            'rgba(14, 32, 60, 0.92)',
+            'rgba(22, 36, 72, 0.92)'
         ];
         let dateColorMap = {};
         let colorIndex = 0;
@@ -1424,7 +1426,7 @@
             return ((currentPrice - originalPrice) / originalPrice) * 100;
         }
 
-        // UPDATED: row background grouped by date
+        // UPDATED: row background grouped by date (comparison table only)
         function renderTable() {
             const tbody = document.getElementById('resultsBody');
             const emptyState = document.getElementById('emptyState');
@@ -1752,7 +1754,7 @@
             fetchInsiderPrices();
         }
 
-        // UPDATED: row background grouped by date for insider table
+        // UPDATED: insider rows use default background (no date-based bg)
         function renderInsiderTable() {
             const tbody = document.getElementById('insiderResultsBody');
             const emptyState = document.getElementById('insiderEmptyState');
@@ -1777,12 +1779,10 @@
                 const alertPriceText = item.alertPrice ? `$${item.alertPrice.toFixed(2)}` : '-';
                 const currentPriceText = item.currentPrice ? `$${item.currentPrice.toFixed(2)}` : 
                     '<span class="current-price-loading">Loading...</span>';
-                
-                const rowColor = getDateColor(item.date);
 
                 return `
-                    <tr style="background-color: ${rowColor};">
-                        <td style="color: #fff; font-weight: 600;">${index + 1}</td>
+                    <tr>
+                        <td>${index + 1}</td>
                         <td>${item.date}</td>
                         <td class="ticker-cell" style="cursor: default;">${item.ticker}</td>
                         <td>${item.companyName}</td>
