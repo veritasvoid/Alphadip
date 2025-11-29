@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tracker Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #050712;
@@ -87,20 +88,6 @@
             background: radial-gradient(circle at 10% -10%, rgba(255, 255, 255, 0.1), transparent 60%);
             opacity: 0.6;
             pointer-events: none;
-        }
-
-        .logo { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
-        .logo-icon {
-            width: 40px; height: 40px; border-radius: 14px;
-            background: radial-gradient(circle at 30% 0%, #ffffff, #60a5fa);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: 700; letter-spacing: 0.12em; color: #020617;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.65), 0 0 14px rgba(96, 165, 250, 0.55);
-        }
-        .logo-text {
-            font-size: 1.3rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-            background: linear-gradient(120deg, #e5e7eb, #60a5fa, #a855f7);
-            -webkit-background-clip: text; color: transparent;
         }
 
         .page { display: none; }
@@ -368,7 +355,7 @@
         .retry-row { margin-top: 12px; display: flex; justify-content: flex-end; }
 
         .news-cell { max-width: 280px; font-size: 0.8125rem; color: var(--text-secondary); }
-        .insider-badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; background: rgba(163, 113, 247, 0.18); color: var(--accent-purple); border: 1px solid rgba(163, 113, 247, 0.4); }
+        .insider-badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; background: rgba(163, 113, 247, 0.18); color: var(--accent-purple); border: 1px solid rgba(163, 113, 247, 0.4); }
 
         .amount-cell { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-weight: 500; }
 
@@ -384,163 +371,66 @@
             .company-panels { grid-template-columns: minmax(0, 1fr); }
         }
 
-        /* === Overrides for header, buttons, insider table === */
-
-        /* Main header title that replaces Tracker Hub / TH */
+        /* === Design tweaks overrides === */
         .main-header-title {
-            position: relative;
-            z-index: 1;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            background: linear-gradient(110deg, #e5e7eb, #60a5fa, #a855f7);
-            -webkit-background-clip: text;
-            color: transparent;
             text-align: center;
+            margin: 0;
         }
-
-        /* Dim button glows and tab glows */
-        .page-nav-tabs {
-            display: flex;
-            gap: 4px;
-            background: rgba(20, 24, 32, 0.9);
-            padding: 4px;
-            border-radius: 999px;
-            border: 1px solid rgba(88, 166, 255, 0.25);
-            box-shadow: 0 0 8px rgba(88, 166, 255, 0.18);
-        }
-
-        .page-nav-tab {
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.18s ease-out;
-        }
-
-        .page-nav-tab:hover {
-            color: var(--text-primary);
-            background: rgba(88, 166, 255, 0.10);
-            box-shadow: 0 0 6px rgba(88, 166, 255, 0.18);
-        }
-
-        .page-nav-tab.active {
-            background: radial-gradient(circle at 30% 0, #58a6ff, #39c5cf);
-            color: #fff;
-            box-shadow: 0 0 10px rgba(88, 166, 255, 0.26);
-        }
-
-        .btn::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.14), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.18s ease-out;
-            pointer-events: none;
-        }
-
-        .btn:hover::after {
-            opacity: 0.4;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #60a5fa, #38bdf8);
-            color: #fff;
-            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35), 0 0 8px rgba(56, 189, 248, 0.22);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.42), 0 0 10px rgba(56, 189, 248, 0.26);
-        }
-
-        .btn-secondary {
-            background: rgba(22, 27, 34, 0.9);
-            color: var(--text-primary);
-            border-color: var(--border-default);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(32, 38, 46, 0.98);
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
-            transform: translateY(-1px);
-        }
-
-        .btn-purple {
-            background: linear-gradient(135deg, #a371f7, #8b5cf6);
-            color: #fff;
-            box-shadow: 0 6px 14px rgba(139, 92, 246, 0.38), 0 0 8px rgba(163, 113, 247, 0.26);
-        }
-
-        .btn-purple:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(139, 92, 246, 0.46), 0 0 10px rgba(163, 113, 247, 0.30);
-        }
-
-        .btn-success {
-            background: transparent;
-            color: var(--accent-green);
-            border-color: var(--border-default);
-        }
-
-        .btn-success:hover {
-            background: rgba(63, 185, 80, 0.12);
-            box-shadow: 0 0 8px rgba(63, 185, 80, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: transparent;
-            color: var(--accent-red);
-            border-color: var(--border-default);
-        }
-
-        .btn-danger:hover {
-            background: rgba(248, 81, 73, 0.12);
-            box-shadow: 0 0 8px rgba(248, 81, 73, 0.32);
-            transform: translateY(-1px);
-        }
-
-        .btn-retry {
-            background: rgba(88, 166, 255, 0.15);
-            color: var(--accent-primary);
-            border: 1px solid rgba(88, 166, 255, 0.4);
-        }
-
-        .btn-retry:hover {
-            background: rgba(88, 166, 255, 0.25);
-            box-shadow: 0 0 8px rgba(88, 166, 255, 0.34);
-        }
-
-        /* Insider page tweaks */
+        /* Insider page rows: slightly larger text */
         #page-insider td {
             font-size: 0.875rem;
         }
-
+        /* News column text matches company text color and slightly larger */
         .news-cell {
             max-width: 280px;
             font-size: 0.875rem;
-            color: var(--text-primary); /* match company text */
+            color: var(--text-primary);
         }
-
+        /* Insider badge slightly larger and brighter */
         .insider-badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 999px;
-            font-size: 0.78rem; /* slightly larger */
+            font-size: 0.78rem;
             font-weight: 600;
             text-transform: uppercase;
             background: rgba(163, 113, 247, 0.26);
             color: #f4e9ff;
             border: 1px solid rgba(191, 148, 255, 0.9);
+        }
+        /* Dim button/tab glows */
+        .page-nav-tabs {
+            box-shadow: 0 0 8px rgba(88, 166, 255, 0.18);
+        }
+        .page-nav-tab:hover {
+            box-shadow: 0 0 6px rgba(88, 166, 255, 0.18);
+        }
+        .page-nav-tab.active {
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.26);
+        }
+        .btn-primary {
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35), 0 0 8px rgba(56, 189, 248, 0.22);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.42), 0 0 10px rgba(56, 189, 248, 0.26);
+        }
+        .btn-secondary {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+        }
+        .btn-secondary:hover {
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
+        }
+        .btn-purple {
+            box-shadow: 0 6px 14px rgba(139, 92, 246, 0.38), 0 0 8px rgba(163, 113, 247, 0.26);
+        }
+        .btn-purple:hover {
+            box-shadow: 0 8px 18px rgba(139, 92, 246, 0.46), 0 0 10px rgba(163, 113, 247, 0.30);
+        }
+        .btn::after {
+            opacity: 0;
+        }
+        .btn:hover::after {
+            opacity: 0.4;
         }
     </style>
 </head>
@@ -548,12 +438,13 @@
     <div class="top-gradient-bar"></div>
     <div class="app-container">
         <header class="nav-header">
-            <h1 id="mainHeaderTitle" class="main-header-title">Dip Tracker</h1>
+            <h1 id="mainHeaderTitle" class="page-title main-header-title">Dip Tracker</h1>
         </header>
 
         <!-- DIP TRACKER PAGE -->
         <div id="page-comparison" class="page active">
             <div class="page-header">
+                <h1 class="page-title">Dip Tracker</h1>
                 <p class="page-subtitle">Parse, compare, and track buy-the-dip entries with real-time prices.</p>
             </div>
             <div class="input-grid">
@@ -653,6 +544,7 @@
         <!-- INSIDER TRACKER PAGE -->
         <div id="page-insider" class="page">
             <div class="page-header">
+                <h1 class="page-title">Insider Tracker</h1>
                 <p class="page-subtitle">Track insider buy signals from CEO Watcher alerts automatically.</p>
             </div>
             <div class="input-grid">
@@ -751,52 +643,57 @@
     </div>
 
     <script>
-        let parsedData = [], rowIdCounter = 0, insiderData = [];
-        let currentExpandedId = null;
-        let currentExpandedInsiderId = null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dataDate').value = today;
-            document.getElementById('insiderDataDate').value = today;
-        });
-
         function showPage(page) {
-            // Switch visible page
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
-
-            // Update nav tabs
             document.querySelectorAll('.page-nav-tab').forEach(t => t.classList.remove('active'));
-
+            
             if (page === 'comparison') {
-                const c1 = document.getElementById('nav1-comparison');
-                const c2 = document.getElementById('nav2-comparison');
-                const ci1 = document.getElementById('nav1-comparison-insider');
-                const ci2 = document.getElementById('nav2-comparison-insider');
-                if (c1) c1.classList.add('active');
-                if (c2) c2.classList.add('active');
-                if (ci1) ci1.classList.add('active');
-                if (ci2) ci2.classList.add('active');
-            } else {
-                const i1 = document.getElementById('nav1-insider');
-                const i2 = document.getElementById('nav2-insider');
-                const ii1 = document.getElementById('nav1-insider-insider');
-                const ii2 = document.getElementById('nav2-insider-insider');
-                if (i1) i1.classList.add('active');
-                if (i2) i2.classList.add('active');
-                if (ii1) ii1.classList.add('active');
-                if (ii2) ii2.classList.add('active');
+                const ids = ['nav1-comparison', 'nav2-comparison'];
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('active');
+                });
+            } else if (page === 'insider') {
+                const ids = ['nav1-insider', 'nav2-insider'];
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('active');
+                });
             }
 
-            // Update main header title
             const mainHeaderTitle = document.getElementById('mainHeaderTitle');
             if (mainHeaderTitle) {
                 mainHeaderTitle.textContent = page === 'comparison' ? 'Dip Tracker' : 'Insider Tracker';
             }
 
-            if (page === 'insider') {
-                loadInsiderData();
+            if (page === 'insider') loadInsiderData();
+        }
+
+
+        let parsedData = [], rowIdCounter = 0, insiderData = [];
+        let currentExpandedId = null;
+        let currentExpandedInsiderId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dataDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('insiderDataDate').value = new Date().toISOString().split('T')[0];
+
+            await loadSheetDataOnStart();
+        });
+
+        async function loadSheetDataOnStart() {
+            try {
+                google.script.run.withSuccessHandler(rows => {
+                    if (!rows || rows.length === 0) return;
+                    parsedData = rows.map(row => ({ ...row, id: ++rowIdCounter }));
+                    renderTable();
+                    showStatus(`Loaded ${rows.length} rows from sheet.`, 'success');
+                }).withFailureHandler(err => {
+                    console.error(err);
+                }).loadDipTrackerSheetData();
+            } catch (e) {
+                console.error(e);
             }
         }
 
@@ -903,6 +800,16 @@
             }
         }
 
+        function getDateColor(dateStr) {
+            if (!dateStr) return 'transparent';
+            const today = new Date();
+            const date = new Date(dateStr);
+            const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 3) return 'rgba(34, 197, 94, 0.06)';
+            if (diffDays <= 7) return 'rgba(234, 179, 8, 0.06)';
+            return 'rgba(148, 163, 184, 0.04)';
+        }
+
         function renderTable() {
             const tbody = document.getElementById('resultsBody');
             const emptyState = document.getElementById('emptyState');
@@ -975,7 +882,7 @@
             let verdictClass = '';
 
             if (verdictRaw) {
-                const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\\d]*([\\d]{1,3})%/i);
+                const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\d]*([\d]{1,3})%/i);
                 if (match) {
                     verdict = match[1].toUpperCase();
                     percent = match[2] + '%';
@@ -1116,7 +1023,7 @@
             let verdictClass = '';
 
             if (verdictRaw) {
-                const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\\d]*([\\d]{1,3})%/i);
+                const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\d]*([\d]{1,3})%/i);
                 if (match) {
                     verdict = match[1].toUpperCase();
                     percent = match[2] + '%';
@@ -1164,42 +1071,23 @@
         function renderInsiderTable() {
             const tbody = document.getElementById('insiderResultsBody');
             const emptyState = document.getElementById('insiderEmptyState');
-
             document.getElementById('insiderRowCount').textContent = `${insiderData.length} rows`;
-
             if (insiderData.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
                 return;
             }
-
             emptyState.style.display = 'none';
-
             tbody.innerHTML = insiderData.map((item, index) => {
-                const change = item.alertPrice && item.currentPrice
-                    ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100
-                    : null;
-
-                const changeClass = change !== null
-                    ? (change >= 0 ? 'change-positive' : 'change-negative')
-                    : '';
-
-                const changeText = change !== null
-                    ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`
-                    : '—';
-
+                const change = item.alertPrice && item.currentPrice ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100 : null;
+                const changeClass = change !== null ? (change >= 0 ? 'change-positive' : 'change-negative') : '';
+                const changeText = change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%` : '—';
                 let currentPriceClass = '';
                 if (item.currentPrice && item.alertPrice) {
-                    currentPriceClass = item.currentPrice >= item.alertPrice
-                        ? 'price-positive'
-                        : 'price-negative';
+                    currentPriceClass = item.currentPrice >= item.alertPrice ? 'price-positive' : 'price-negative';
                 }
-
                 const isExpanded = currentExpandedInsiderId === item.id;
-
-                // No background color on Insider rows
-                let html = `
-                    <tr>
+                let html = `<tr>
                         <td>${index + 1}</td>
                         <td>${item.date}</td>
                         <td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}</td>
@@ -1210,12 +1098,9 @@
                         <td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td>
                         <td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td>
                         <td class="${changeClass}">${changeText}</td>
-                    </tr>
-                `;
-
+                    </tr>`;
                 if (isExpanded) {
-                    html += `
-                        <tr class="company-info-row">
+                    html += `<tr class="company-info-row">
                             <td colspan="10">
                                 <div class="company-info-content">
                                     ${item.companyInfo
@@ -1223,10 +1108,8 @@
                                         : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}
                                 </div>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 }
-
                 return html;
             }).join('');
         }
@@ -1249,7 +1132,7 @@
                     change !== null ? change.toFixed(2) + '%' : ''
                 ].join(',');
             });
-            const csv = [headers.join(','), ...rows].join('\\n');
+            const csv = [headers.join(','), ...rows].join('\n');
             downloadCSV(csv, 'insider_trades');
         }
 
