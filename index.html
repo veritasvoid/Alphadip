@@ -46,7 +46,6 @@
             overflow-x: hidden;
         }
 
-        /* subtle noise overlay */
         body::before {
             content: "";
             pointer-events: none;
@@ -71,7 +70,6 @@
             position: relative;
         }
 
-        /* TOP GRADIENT PULSE BAR */
         .top-gradient-bar {
             position: fixed;
             left: 0;
@@ -147,10 +145,14 @@
         }
 
         .logo-text {
-            font-size: 1.4rem;
-            font-weight: 600;
-            letter-spacing: 0.06em;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
+            background: linear-gradient(120deg, #e5e7eb, #58a6ff, #a371f7);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 16px rgba(88, 166, 255, 0.65);
         }
 
         .page { display: none; }
@@ -167,9 +169,11 @@
         }
 
         .page-title {
-            font-size: 1.8rem;
-            font-weight: 600;
+            font-size: 1.9rem;
+            font-weight: 700;
             margin-bottom: 4px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .page-subtitle {
@@ -183,10 +187,8 @@
             gap: 20px;
             margin-bottom: 24px;
         }
-
         .input-full { grid-column: 1 / -1; }
 
-        /* GLASS CARDS */
         .card {
             background: var(--glass-bg);
             border-radius: 16px;
@@ -548,7 +550,6 @@
         .ticker-cell.expanded::after { content: ' ‹'; }
 
         .price-cell { font-family: 'JetBrains Mono', monospace; }
-
         .change-positive, .price-positive { color: var(--accent-green); font-weight: 600; }
         .change-negative, .price-negative { color: var(--accent-red); font-weight: 600; }
 
@@ -634,7 +635,7 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* EXPANDED COMPANY INFO AREA */
+        /* EXPANDED COMPANY INFO */
 
         .company-info-row td {
             padding: 0;
@@ -725,7 +726,7 @@
 
         .company-panels {
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
         }
 
@@ -739,136 +740,70 @@
                 0 0 18px rgba(15, 23, 42, 0.8);
         }
 
-        .company-panel-snapshot h4 {
+        .company-panel h4 {
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: var(--accent-primary);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        .company-panel-snapshot p {
+        .company-panel-snapshot h4 {
+            color: var(--accent-primary);
+        }
+
+        .company-panel-bottomline h4 {
+            color: var(--accent-primary);
+        }
+
+        .company-panel p {
             color: var(--text-secondary);
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             line-height: 1.7;
         }
 
-        .company-panel-snapshot a {
+        .company-panel a {
             color: var(--accent-primary);
             text-decoration: none;
             font-size: 0.8rem;
         }
 
-        .company-panel-bottomline {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .company-panel-bottomline::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.16), transparent 60%);
-            opacity: 0.9;
-            pointer-events: none;
-        }
-
-        .company-panel-bottomline-inner {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-rows: auto auto;
-            gap: 12px;
-        }
-
-        .bottomline-header {
-            display: flex;
-            gap: 12px;
-            align-items: stretch;
-            flex-wrap: wrap;
-        }
-
-        .verdict-card {
-            flex: 0 0 145px;
-            border-radius: 14px;
-            padding: 10px 12px;
+        .company-panel-score {
             display: flex;
             flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
             justify-content: center;
-            gap: 4px;
-            background: radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.18), rgba(15, 23, 42, 1));
-            border: 1px solid rgba(34, 197, 94, 0.7);
-            box-shadow:
-                0 0 24px rgba(34, 197, 94, 0.6),
-                0 12px 26px rgba(0, 0, 0, 0.9);
-        }
-
-        /* neutral / wait style by default until Grok is wired */
-        .verdict-card-wait {
-            background: radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 1));
+            background:
+                radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 1));
             border-color: rgba(250, 204, 21, 0.7);
             box-shadow:
                 0 0 22px rgba(250, 204, 21, 0.55),
                 0 12px 26px rgba(0, 0, 0, 0.9);
         }
 
-        .verdict-label {
+        .score-label {
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: rgba(248, 250, 252, 0.7);
+            color: rgba(248, 250, 252, 0.76);
         }
 
-        .verdict-main {
-            font-size: 0.95rem;
+        .score-main {
+            font-size: 1.05rem;
             font-weight: 600;
+            color: #fefce8;
         }
 
-        .verdict-score {
+        .score-sub {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
             color: rgba(248, 250, 252, 0.8);
         }
 
-        .bottomline-copy h4 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--accent-primary);
-            margin-bottom: 6px;
-        }
-
-        .bottomline-copy p {
-            font-size: 0.86rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .info-item {
-            background: rgba(19, 24, 32, 0.96);
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(48, 54, 61, 0.9);
-        }
-
-        .info-item label {
-            font-size: 0.625rem;
-            text-transform: uppercase;
+        .score-note {
+            font-size: 0.78rem;
             color: var(--text-tertiary);
-            display: block;
-            margin-bottom: 4px;
-            letter-spacing: 0.06em;
-        }
-
-        .info-item span {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8125rem;
+            margin-top: 6px;
         }
 
         .company-info-loading {
@@ -899,7 +834,7 @@
 
         @media (max-width: 1024px) {
             .company-panels {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
@@ -909,6 +844,9 @@
             .button-row { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
             .date-row-container { flex-direction: column; align-items: flex-start; }
+            .company-panels {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
     </style>
 </head>
@@ -918,59 +856,154 @@
         <header class="nav-header">
             <div class="logo"><div class="logo-icon">📈</div><span class="logo-text">Stock Tracker Hub</span></div>
         </header>
+
+        <!-- DIP TRACKER PAGE -->
         <div id="page-comparison" class="page active">
-            <div class="page-header"><h1 class="page-title">Stock Tracker Hub</h1><p class="page-subtitle">Parse, compare, and track stock performance with real-time price updates</p></div>
+            <div class="page-header">
+                <h1 class="page-title">Dip Tracker</h1>
+                <p class="page-subtitle">Parse, compare, and track buy-the-dip entries with real-time prices.</p>
+            </div>
             <div class="input-grid">
                 <div class="card input-full">
                     <div class="date-row-container">
-                        <div class="date-picker-row"><label for="dataDate">Data Date</label><input type="date" id="dataDate"></div>
+                        <div class="date-picker-row">
+                            <label for="dataDate">Data Date</label>
+                            <input type="date" id="dataDate">
+                        </div>
                         <div class="page-nav-tabs">
-                            <button class="page-nav-tab active" onclick="showPage('comparison')" id="nav1-comparison">Stock Comparison</button>
-                            <button class="page-nav-tab" onclick="showPage('insider')" id="nav1-insider">Insider Tracking</button>
+                            <button class="page-nav-tab active" onclick="showPage('comparison')" id="nav1-comparison">Dip Tracker</button>
+                            <button class="page-nav-tab" onclick="showPage('insider')" id="nav1-insider">Insider Tracker</button>
                         </div>
                     </div>
                 </div>
-                <div class="card"><div class="card-header"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><span class="card-title">Data Set 1</span></div><textarea id="dataset1" placeholder="Paste your first data set here..."></textarea></div>
-                <div class="card"><div class="card-header"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><span class="card-title">Data Set 2</span></div><textarea id="dataset2" placeholder="Paste your second data set here..."></textarea></div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                        <span class="card-title">Data Set 1</span>
+                    </div>
+                    <textarea id="dataset1" placeholder="Paste your first data set here..."></textarea>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                        <span class="card-title">Data Set 2</span>
+                    </div>
+                    <textarea id="dataset2" placeholder="Paste your second data set here..."></textarea>
+                </div>
             </div>
             <div class="button-row">
-                <button class="btn btn-primary" onclick="compareAndParse()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Compare & Parse</button>
-                <button class="btn btn-secondary" onclick="refreshPrices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh Prices</button>
-                <button class="btn btn-danger" onclick="clearAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Clear All</button>
-                <button class="btn btn-success" onclick="exportToCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+                <button class="btn btn-primary" onclick="compareAndParse()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    Compare & Parse
+                </button>
+                <button class="btn btn-secondary" onclick="refreshPrices()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Refresh Prices
+                </button>
+                <button class="btn btn-danger" onclick="clearAll()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Clear All
+                </button>
+                <button class="btn btn-success" onclick="exportToCSV()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export CSV
+                </button>
             </div>
             <div id="statusMessage" class="status-message"></div>
             <div class="results-card">
-                <div class="results-header"><h2 class="results-title">Results <span class="results-count" id="rowCount">0 rows</span></h2></div>
-                <div class="table-container"><table><thead><tr><th>#</th><th>Date</th><th>Ticker</th><th>Company Name</th><th>Price</th><th>Current Price</th><th>% Change</th><th></th></tr></thead><tbody id="resultsBody"></tbody></table></div>
-                <div id="emptyState" class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"/></svg><p>No data yet. Paste your data sets above and click "Compare & Parse".</p></div>
+                <div class="results-header">
+                    <h2 class="results-title">Results <span class="results-count" id="rowCount">0 rows</span></h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>#</th><th>Date</th><th>Ticker</th><th>Company Name</th><th>Price</th><th>Current Price</th><th>% Change</th><th></th></tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+                <div id="emptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"/>
+                    </svg>
+                    <p>No data yet. Paste your data sets above and click "Compare & Parse".</p>
+                </div>
             </div>
         </div>
+
+        <!-- INSIDER TRACKER PAGE -->
         <div id="page-insider" class="page">
-            <div class="page-header"><h1 class="page-title">Stock Tracker Hub</h1><p class="page-subtitle">Track insider buy signals from CEO Watcher alerts automatically</p></div>
+            <div class="page-header">
+                <h1 class="page-title">Insider Tracker</h1>
+                <p class="page-subtitle">Track insider buy signals from CEO Watcher alerts automatically.</p>
+            </div>
             <div class="input-grid">
                 <div class="card input-full">
                     <div class="date-row-container">
-                        <div class="date-picker-row"><label>Insider Tracking</label></div>
+                        <div class="date-picker-row">
+                            <label>Insider Tracker</label>
+                        </div>
                         <div class="page-nav-tabs">
-                            <button class="page-nav-tab" onclick="showPage('comparison')" id="nav2-comparison">Stock Comparison</button>
-                            <button class="page-nav-tab active" onclick="showPage('insider')" id="nav2-insider">Insider Tracking</button>
+                            <button class="page-nav-tab" onclick="showPage('comparison')" id="nav2-comparison">Dip Tracker</button>
+                            <button class="page-nav-tab active" onclick="showPage('insider')" id="nav2-insider">Insider Tracker</button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="button-row">
-                <button class="btn btn-secondary" onclick="refreshInsiderPrices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh Prices</button>
-                <button class="btn btn-success" onclick="exportInsiderCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+                <button class="btn btn-secondary" onclick="refreshInsiderPrices()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Refresh Prices
+                </button>
+                <button class="btn btn-success" onclick="exportInsiderCSV()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export CSV
+                </button>
             </div>
             <div id="insiderStatusMessage" class="status-message"></div>
             <div class="results-card">
-                <div class="results-header"><h2 class="results-title">Insider Buy Alerts <span class="results-count" id="insiderRowCount">0 rows</span></h2></div>
-                <div class="table-container"><table><thead><tr><th>#</th><th>Date</th><th>Ticker</th><th>Company</th><th>News</th><th>Insider</th><th>Amount</th><th>Alert Price</th><th>Current Price</th><th>% Change</th></tr></thead><tbody id="insiderResultsBody"></tbody></table></div>
-                <div id="insiderEmptyState" class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p>No insider trades yet. Data is automatically imported from CEO Watcher emails at 8am daily.</p></div>
+                <div class="results-header">
+                    <h2 class="results-title">Insider Buy Alerts <span class="results-count" id="insiderRowCount">0 rows</span></h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>#</th><th>Date</th><th>Ticker</th><th>Company</th><th>News</th><th>Insider</th><th>Amount</th><th>Alert Price</th><th>Current Price</th><th>% Change</th></tr>
+                        </thead>
+                        <tbody id="insiderResultsBody"></tbody>
+                    </table>
+                </div>
+                <div id="insiderEmptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <p>No insider trades yet. Data is automatically imported from CEO Watcher emails at 8am daily.</p>
+                </div>
             </div>
         </div>
     </div>
+
     <script>
         const GOOGLE_SHEETS_ID = '19WB8SI3DBXKIeqyfGn2W2ihRLdI6_F5C0dhEucYSoNs';
         const GOOGLE_API_KEY = 'AIzaSyDzZYtdzU74EaBpYjo-e3kDdMaHmnN-2Uw';
@@ -981,7 +1014,6 @@
         const ALPACA_TRADING_URL = 'https://paper-api.alpaca.markets/v2';
         const FINNHUB_API_KEY = 'd4k7dohr01qvpdoie0rgd4k7dohr01qvpdoie0s0';
 
-        // date colors
         const dateColors = [
             'rgba(56, 139, 253, 0.20)',
             'rgba(46, 160, 67, 0.20)',
@@ -1154,6 +1186,7 @@
             }
             return results;
         }
+
         function parseRecord(record) {
             record = record.trim().replace(/\s*M\s*$/, '');
             const tokens = record.split(/\s+/);
@@ -1274,25 +1307,15 @@
                             <p style="color: var(--accent-red);">Unable to load company profile right now.</p>
                         </div>
                         <div class="company-panel company-panel-bottomline">
-                            <div class="company-panel-bottomline-inner">
-                                <div class="bottomline-header">
-                                    <div class="verdict-card verdict-card-wait">
-                                        <div class="verdict-label">Buy the dip</div>
-                                        <div class="verdict-main">Wait</div>
-                                        <div class="verdict-score">— % certainty</div>
-                                    </div>
-                                    <div class="bottomline-copy">
-                                        <h4>Bottom Line</h4>
-                                        <p>AI verdict coming soon. Once Grok analysis is wired in, this panel will show a clear buy / no-buy call and certainty score for this ticker.</p>
-                                    </div>
-                                </div>
-                                <div class="info-grid">
-                                    <div class="info-item"><label>Exchange</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Industry</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Tradable</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Shortable</label><span>N/A</span></div>
-                                </div>
-                            </div>
+                            <h4>Bottom Line</h4>
+                            <p>AI verdict coming soon. Once Grok analysis is wired in, this panel will show a clear Yes/No call and thesis for buying dips in this name.</p>
+                        </div>
+                        <div class="company-panel company-panel-score">
+                            <h4>Buy the Dip</h4>
+                            <div class="score-label">Scoreboard</div>
+                            <div class="score-main">Wait</div>
+                            <div class="score-sub">— % certainty</div>
+                            <p class="score-note">Grok score will land here the first time you request analysis for this ticker.</p>
                         </div>
                     </div>
                 </div>`;
@@ -1317,25 +1340,15 @@
                         ${info.weburl ? `<p style="margin-top:10px;"><a href="${info.weburl}" target="_blank">🌐 Website</a></p>` : ''}
                     </div>
                     <div class="company-panel company-panel-bottomline">
-                        <div class="company-panel-bottomline-inner">
-                            <div class="bottomline-header">
-                                <div class="verdict-card verdict-card-wait">
-                                    <div class="verdict-label">Buy the dip</div>
-                                    <div class="verdict-main">Wait</div>
-                                    <div class="verdict-score">— % certainty</div>
-                                </div>
-                                <div class="bottomline-copy">
-                                    <h4>Bottom Line</h4>
-                                    <p>AI verdict coming soon. For now, this trades on ${info.exchange || 'its primary exchange'} in the ${info.industry || 'listed'} space; use your thesis and the price action in the table until Grok analysis is integrated.</p>
-                                </div>
-                            </div>
-                            <div class="info-grid">
-                                <div class="info-item"><label>Exchange</label><span>${info.exchange || 'N/A'}</span></div>
-                                <div class="info-item"><label>Industry</label><span>${info.industry || 'N/A'}</span></div>
-                                <div class="info-item"><label>Tradable</label><span style="color:${info.tradable ? 'var(--accent-green)' : 'var(--accent-red)'}">${info.tradable ? 'Yes' : 'No'}</span></div>
-                                <div class="info-item"><label>Shortable</label><span style="color:${info.shortable ? 'var(--accent-green)' : 'var(--accent-red)'}">${info.shortable ? 'Yes' : 'No'}</span></div>
-                            </div>
-                        </div>
+                        <h4>Bottom Line</h4>
+                        <p>AI verdict coming soon. For now this trades on ${info.exchange || 'its primary exchange'} in the ${info.industry || 'listed'} space; use your own thesis and the price action in the Dip Tracker table until Grok analysis is integrated.</p>
+                    </div>
+                    <div class="company-panel company-panel-score">
+                        <h4>Buy the Dip</h4>
+                        <div class="score-label">Scoreboard</div>
+                        <div class="score-main">Wait</div>
+                        <div class="score-sub">— % certainty</div>
+                        <p class="score-note">Once Grok runs on this ticker, this card will flip to Yes/No plus a live certainty percentage.</p>
                     </div>
                 </div>
             </div>`;
@@ -1348,6 +1361,7 @@
             renderTable();
             if (item.expanded && !item.companyInfo) await fetchCompanyInfo(item);
         }
+
         async function fetchCompanyInfo(item) {
             let info = {};
             try {
@@ -1385,6 +1399,7 @@
                 autoSave();
             }
         }
+
         function updateCurrentPrice(id, newPrice) {
             const item = parsedData.find(d => d.id === id);
             if (item && newPrice) {
@@ -1393,12 +1408,14 @@
                 autoSave();
             }
         }
+
         function removeRow(id) {
             parsedData = parsedData.filter(d => d.id !== id);
             renderTable();
             showStatus('Removed', 'info');
             autoSave();
         }
+
         function clearAll() {
             if (parsedData.length === 0) { showStatus('Nothing to clear', 'error'); return; }
             if (confirm('Clear all data?')) {
@@ -1408,6 +1425,7 @@
                 autoSave();
             }
         }
+
         function refreshPrices() {
             if (parsedData.length === 0) { showStatus('No data', 'error'); return; }
             showStatus('Refreshing...', 'info');
@@ -1415,6 +1433,7 @@
             renderTable();
             fetchCurrentPrices(parsedData);
         }
+
         function exportToCSV() {
             if (parsedData.length === 0) { showStatus('No data', 'error'); return; }
             const headers = ['#', 'Date', 'Ticker', 'Company', 'Price', 'Current', '% Change'];
@@ -1432,6 +1451,7 @@
             });
             downloadCSV([headers.join(','), ...rows].join('\n'), 'stock_comparison');
         }
+
         function downloadCSV(csv, name) {
             const blob = new Blob([csv], { type: 'text/csv' });
             const link = document.createElement('a');
@@ -1497,6 +1517,7 @@
                 }
             }
         }
+
         function refreshInsiderPrices() {
             if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; }
             showInsiderStatus('Refreshing...', 'info');
@@ -1512,6 +1533,7 @@
             renderInsiderTable();
             if (item.expanded && !item.companyInfo) await fetchInsiderCompanyInfo(item);
         }
+
         async function fetchInsiderCompanyInfo(item) {
             let info = {};
             try {
@@ -1561,25 +1583,15 @@
                             <p style="color: var(--accent-red);">Unable to load company profile right now.</p>
                         </div>
                         <div class="company-panel company-panel-bottomline">
-                            <div class="company-panel-bottomline-inner">
-                                <div class="bottomline-header">
-                                    <div class="verdict-card verdict-card-wait">
-                                        <div class="verdict-label">Buy the dip</div>
-                                        <div class="verdict-main">Wait</div>
-                                        <div class="verdict-score">— % certainty</div>
-                                    </div>
-                                    <div class="bottomline-copy">
-                                        <h4>Bottom Line</h4>
-                                        <p>AI verdict coming soon. Once Grok is wired into insider flows, this panel will show a conviction score for following these buys.</p>
-                                    </div>
-                                </div>
-                                <div class="info-grid">
-                                    <div class="info-item"><label>Exchange</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Industry</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Tradable</label><span>N/A</span></div>
-                                    <div class="info-item"><label>Shortable</label><span>N/A</span></div>
-                                </div>
-                            </div>
+                            <h4>Bottom Line</h4>
+                            <p>AI insider verdict coming soon. Once Grok is wired into Insider Tracker, this will summarise whether following these buys still makes sense.</p>
+                        </div>
+                        <div class="company-panel company-panel-score">
+                            <h4>Buy the Dip</h4>
+                            <div class="score-label">Scoreboard</div>
+                            <div class="score-main">Wait</div>
+                            <div class="score-sub">— % certainty</div>
+                            <p class="score-note">Grok certainty for this insider setup will show here after first analysis.</p>
                         </div>
                     </div>
                 </div>`;
@@ -1604,25 +1616,15 @@
                         ${info.weburl ? `<p style="margin-top:10px;"><a href="${info.weburl}" target="_blank">🌐 Website</a></p>` : ''}
                     </div>
                     <div class="company-panel company-panel-bottomline">
-                        <div class="company-panel-bottomline-inner">
-                            <div class="bottomline-header">
-                                <div class="verdict-card verdict-card-wait">
-                                    <div class="verdict-label">Buy the dip</div>
-                                    <div class="verdict-main">Wait</div>
-                                    <div class="verdict-score">— % certainty</div>
-                                </div>
-                                <div class="bottomline-copy">
-                                    <h4>Bottom Line</h4>
-                                    <p>AI insider verdict coming soon. For now, combine these trades with your thesis and the alert vs. current price gap shown in the table.</p>
-                                </div>
-                            </div>
-                            <div class="info-grid">
-                                <div class="info-item"><label>Exchange</label><span>${info.exchange || 'N/A'}</span></div>
-                                <div class="info-item"><label>Industry</label><span>${info.industry || 'N/A'}</span></div>
-                                <div class="info-item"><label>Tradable</label><span style="color:${info.tradable ? 'var(--accent-green)' : 'var(--accent-red)'}">${info.tradable ? 'Yes' : 'No'}</span></div>
-                                <div class="info-item"><label>Shortable</label><span style="color:${info.shortable ? 'var(--accent-green)' : 'var(--accent-red)'}">${info.shortable ? 'Yes' : 'No'}</span></div>
-                            </div>
-                        </div>
+                        <h4>Bottom Line</h4>
+                        <p>AI insider verdict coming soon. Combine this trade with your own thesis and the alert vs. current price spread in Insider Tracker until Grok is live.</p>
+                    </div>
+                    <div class="company-panel company-panel-score">
+                        <h4>Buy the Dip</h4>
+                        <div class="score-label">Scoreboard</div>
+                        <div class="score-main">Wait</div>
+                        <div class="score-sub">— % certainty</div>
+                        <p class="score-note">Future state: Yes/No plus certainty when Grok has seen and stored this ticker’s insider pattern.</p>
                     </div>
                 </div>
             </div>`;
