@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050712;
+            --bg-secondary: rgba(13, 17, 23, 0.9);
+            --bg-tertiary: rgba(22, 27, 34, 0.9);
+            --bg-elevated: rgba(32, 38, 46, 0.96);
+            --accent-primary: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --accent-cyan: #39c5cf;
+            --accent-amber: #f2b236;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-tertiary: #6e7681;
+            --border-default: #30363d;
+            --border-muted: #21262d;
+            --glass-border: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(7, 10, 18, 0.86);
+            --glass-elevated-bg: rgba(10, 14, 22, 0.96);
+            --shadow-soft: 0 14px 35px rgba(0, 0, 0, 0.55);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 15px; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(88, 166, 255, 0.14), transparent 55%),
+                radial-gradient(circle at 100% 100%, rgba(163, 113, 247, 0.12), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(63, 185, 80, 0.08), transparent 55%),
+                #02040a;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+            mix-blend-mode: soft-light;
+            z-index: -1;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(10, 13, 20, 0.85); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #3b82f6, #6366f1); border-radius: 4px; }
+
+        .app-container { max-width: 1600px; margin: 0 auto; padding: 24px; position: relative; }
+
+        .top-gradient-bar {
+            position: fixed; left: 0; top: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.7), rgba(163, 113, 247, 0.7), rgba(57, 197, 207, 0.7), rgba(63, 185, 80, 0.7), rgba(88, 166, 255, 0.2));
+            background-size: 200% 100%;
+            animation: pulse-bar 14s linear infinite;
+            z-index: 999;
+        }
+        @keyframes pulse-bar { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* PAGE-SPECIFIC HEADER */
+        .page-header-bar {
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 28px; padding: 18px 22px; border-radius: 20px;
+            background: radial-gradient(circle at 0% 0%, rgba(88, 166, 255, 0.12), transparent 60%), radial-gradient(circle at 100% 100%, rgba(163, 113, 247, 0.12), transparent 60%), rgba(10, 14, 22, 0.94);
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 12px rgba(88, 166, 255, 0.15);
+            position: relative; overflow: hidden;
+        }
+        .page-header-bar::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 10% -10%, rgba(255, 255, 255, 0.1), transparent 60%); opacity: 0.6; pointer-events: none; }
+
+        .page-header-title {
+            font-size: 1.5rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+            background: linear-gradient(120deg, #e5e7eb, #60a5fa, #a855f7);
+            -webkit-background-clip: text; color: transparent;
+            position: relative; z-index: 1;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.22s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .page-header { margin-bottom: 22px; padding: 10px 4px; text-align: center; }
+        .page-subtitle { color: var(--text-secondary); font-size: 1rem; }
+
+        .input-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .input-full { grid-column: 1 / -1; }
+
+        .card {
+            background: var(--glass-bg); border-radius: 16px; border: 1px solid var(--glass-border);
+            padding: 20px; box-shadow: var(--shadow-soft); backdrop-filter: blur(14px);
+        }
+        .results-card {
+            background: var(--glass-elevated-bg); border-radius: 18px;
+            border: 1px solid rgba(88, 166, 255, 0.16);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8), 0 0 12px rgba(88, 166, 255, 0.08);
+            overflow: hidden; backdrop-filter: blur(18px);
+        }
+
+        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .card-icon {
+            width: 32px; height: 32px;
+            background: radial-gradient(circle at 30% 0%, rgba(88, 166, 255, 0.2), rgba(22, 27, 34, 0.9));
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary);
+        }
+        .card-title { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+
+        .date-row-container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .date-picker-row { display: flex; align-items: center; gap: 16px; }
+        .date-picker-row label { font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; }
+
+        .page-nav-tabs {
+            display: flex; gap: 4px; background: rgba(20, 24, 32, 0.9); padding: 4px; border-radius: 999px;
+            border: 1px solid rgba(88, 166, 255, 0.25); box-shadow: 0 0 8px rgba(88, 166, 255, 0.15);
+        }
+        .page-nav-tab {
+            padding: 10px 18px; border-radius: 999px; border: none; background: transparent;
+            color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 0.9rem;
+            font-weight: 500; cursor: pointer; transition: all 0.18s ease-out;
+        }
+        .page-nav-tab:hover { color: var(--text-primary); background: rgba(88, 166, 255, 0.12); }
+        .page-nav-tab.active { background: radial-gradient(circle at 30% 0%, #58a6ff, #39c5cf); color: #fff; box-shadow: 0 0 10px rgba(88, 166, 255, 0.35); }
+
+        input[type="date"] {
+            font-family: 'JetBrains Mono', monospace; padding: 10px 14px;
+            background: rgba(19, 24, 32, 0.95); border: 1px solid var(--border-default); border-radius: 10px;
+            color: var(--text-primary); font-size: 0.95rem;
+            transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+        }
+        input[type="date"]:focus { outline: none; border-color: var(--accent-primary); background: rgba(8, 12, 20, 0.95); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
+
+        textarea {
+            width: 100%; height: 140px; background: rgba(15, 19, 29, 0.96);
+            border: 1px solid var(--border-default); border-radius: 12px; padding: 14px;
+            color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            resize: vertical; transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+        }
+        textarea:focus { outline: none; border-color: var(--accent-primary); background: rgba(8, 12, 20, 0.98); box-shadow: 0 0 10px rgba(88, 166, 255, 0.25); }
+        textarea::placeholder { color: var(--text-tertiary); }
+
+        .button-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+        .btn {
+            font-family: 'Inter', sans-serif; font-weight: 500; padding: 11px 20px; border-radius: 999px;
+            border: 1px solid transparent; cursor: pointer; font-size: 0.95rem; transition: all 0.18s ease-out;
+            display: inline-flex; align-items: center; gap: 8px; position: relative; overflow: hidden;
+        }
+        .btn svg { width: 17px; height: 17px; }
+        .btn::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.1), transparent 60%); opacity: 0; transition: opacity 0.18s ease-out; pointer-events: none; }
+        .btn:hover::after { opacity: 0.5; }
+
+        /* TONED DOWN BUTTON GLOWS */
+        .btn-primary { background: linear-gradient(135deg, #60a5fa, #38bdf8); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45); }
+        .btn-secondary { background: rgba(22, 27, 34, 0.9); color: var(--text-primary); border-color: var(--border-default); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+        .btn-secondary:hover { background: rgba(32, 38, 46, 0.98); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5); transform: translateY(-1px); }
+        .btn-danger { background: transparent; color: var(--accent-red); border-color: var(--border-default); }
+        .btn-danger:hover { background: rgba(248, 81, 73, 0.1); box-shadow: 0 0 8px rgba(248, 81, 73, 0.25); transform: translateY(-1px); }
+        .btn-success { background: transparent; color: var(--accent-green); border-color: var(--border-default); }
+        .btn-success:hover { background: rgba(63, 185, 80, 0.1); box-shadow: 0 0 8px rgba(63, 185, 80, 0.25); transform: translateY(-1px); }
+        .btn-purple { background: linear-gradient(135deg, #a371f7, #8b5cf6); color: #fff; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+        .btn-purple:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); }
+
+        .btn-small { padding: 7px 14px; font-size: 0.85rem; }
+        .btn-retry { background: rgba(88, 166, 255, 0.12); color: var(--accent-primary); border: 1px solid rgba(88, 166, 255, 0.3); }
+        .btn-retry:hover { background: rgba(88, 166, 255, 0.2); box-shadow: 0 0 6px rgba(88, 166, 255, 0.25); }
+
+        .status-message { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.95rem; display: none; border: 1px solid transparent; backdrop-filter: blur(10px); max-width: 520px; margin-left: auto; margin-right: auto; }
+        .status-success { background: rgba(63, 185, 80, 0.1); border-color: rgba(63, 185, 80, 0.4); color: var(--accent-green); display: block; }
+        .status-error { background: rgba(248, 81, 73, 0.12); border-color: rgba(248, 81, 73, 0.45); color: var(--accent-red); display: block; }
+        .status-info { background: rgba(88, 166, 255, 0.12); border-color: rgba(88, 166, 255, 0.4); color: var(--accent-primary); display: block; }
+
+        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(48, 54, 61, 0.8); background: linear-gradient(135deg, rgba(19, 24, 32, 0.96), rgba(10, 14, 22, 0.96)); backdrop-filter: blur(18px); }
+        .results-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .results-count { background: rgba(25, 30, 40, 0.95); padding: 5px 12px; border-radius: 999px; font-size: 0.85rem; color: var(--text-secondary); border: 1px solid rgba(88, 166, 255, 0.25); }
+
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: rgba(16, 21, 31, 0.98); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); }
+        th { padding: 14px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 1px solid rgba(48, 54, 61, 0.9); white-space: nowrap; }
+        td { padding: 15px 16px; border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
+        tbody tr { transition: filter 0.12s ease-out, transform 0.12s ease-out, box-shadow 0.12s ease-out; box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
+        tbody tr:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+
+        .ticker-cell { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent-primary); cursor: pointer; position: relative; transition: color 0.15s ease-out, text-shadow 0.15s ease-out; font-size: 0.95rem; }
+        .ticker-cell:hover { color: var(--accent-cyan); text-shadow: 0 0 6px rgba(88, 166, 255, 0.5); }
+        .ticker-cell::after { content: ' ›'; font-size: 0.8rem; opacity: 0.5; }
+        .ticker-cell.expanded::after { content: ' ‹'; }
+
+        .price-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
+        .change-positive, .price-positive { color: var(--accent-green); font-weight: 600; }
+        .change-negative, .price-negative { color: var(--accent-red); font-weight: 600; }
+
+        .date-input { font-family: 'JetBrains Mono', monospace; padding: 7px 11px; background: rgba(19, 24, 32, 0.96); border: 1px solid var(--border-default); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out; }
+        .date-input:focus { outline: none; border-color: var(--accent-primary); background: rgba(8, 12, 20, 0.98); box-shadow: 0 0 6px rgba(88, 166, 255, 0.3); }
+        .price-input { font-family: 'JetBrains Mono', monospace; width: 90px; padding: 7px 11px; background: rgba(19, 24, 32, 0.96); border: 1px solid var(--border-default); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; text-align: right; transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out; }
+        .price-input:focus { outline: none; border-color: var(--accent-primary); background: rgba(8, 12, 20, 0.98); box-shadow: 0 0 6px rgba(88, 166, 255, 0.25); }
+
+        .btn-remove { background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 6px 8px; border-radius: 6px; opacity: 0.6; transition: background 0.15s ease-out, color 0.15s ease-out, opacity 0.15s ease-out; font-size: 1rem; }
+        .btn-remove:hover { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); opacity: 1; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-state p { max-width: 320px; margin: 0 auto; font-size: 0.95rem; }
+
+        .loading { display: inline-block; width: 15px; height: 15px; border: 2px solid var(--border-default); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* EXPANDED COMPANY INFO */
+        .company-info-row td { padding: 0; }
+        .company-info-content {
+            padding: 20px 24px 18px;
+            background: radial-gradient(circle at 0 0, rgba(88, 166, 255, 0.14), transparent 60%), radial-gradient(circle at 100% 100%, rgba(163, 113, 247, 0.14), transparent 60%), rgba(3, 7, 18, 0.98);
+            backdrop-filter: blur(20px); border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 12px rgba(88, 166, 255, 0.12);
+        }
+        .company-info-layout { display: grid; grid-template-rows: auto 1fr; gap: 16px; }
+        .company-hero {
+            display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 14px;
+            background: linear-gradient(120deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96)), linear-gradient(120deg, rgba(88, 166, 255, 0.35), rgba(163, 113, 247, 0.45));
+            border: 1px solid rgba(88, 166, 255, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 10px rgba(88, 166, 255, 0.2);
+            position: relative; overflow: hidden;
+        }
+        .company-hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.08), transparent 55%); mix-blend-mode: soft-light; opacity: 0.7; pointer-events: none; }
+        .company-hero-main { position: relative; z-index: 1; }
+        .company-hero-ticker { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 4px; }
+        .company-hero-name { font-size: 1rem; color: var(--text-secondary); }
+        .company-hero-meta { display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+        .company-hero-chip { padding: 5px 12px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid rgba(148, 163, 184, 0.6); background: rgba(15, 23, 42, 0.72); color: #e5e7eb; }
+
+        .company-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .company-panel { background: rgba(7, 11, 20, 0.96); border-radius: 14px; padding: 16px 16px 14px; border: 1px solid rgba(31, 41, 55, 0.9); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); }
+        .company-panel h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+        .company-panel-snapshot h4, .company-panel-bottomline h4 { color: var(--accent-primary); }
+        .company-panel p { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; }
+        .company-panel a { color: var(--accent-primary); text-decoration: none; font-size: 0.9rem; }
+
+        .company-panel-score { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; justify-content: center; background: radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.1), rgba(15, 23, 42, 1)); border-color: rgba(250, 204, 21, 0.5); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 8px rgba(250, 204, 21, 0.2); }
+        .company-panel-score.verdict-yes { background: radial-gradient(circle at 0 0, rgba(63, 185, 80, 0.12), rgba(15, 23, 42, 1)); border-color: rgba(63, 185, 80, 0.5); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 8px rgba(63, 185, 80, 0.2); }
+        .company-panel-score.verdict-yes .score-main, .company-panel-score.verdict-yes .score-sub { color: var(--accent-green); }
+        .company-panel-score.verdict-no { background: radial-gradient(circle at 0 0, rgba(248, 81, 73, 0.12), rgba(15, 23, 42, 1)); border-color: rgba(248, 81, 73, 0.5); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 8px rgba(248, 81, 73, 0.2); }
+        .company-panel-score.verdict-no .score-main, .company-panel-score.verdict-no .score-sub { color: var(--accent-red); }
+        .company-panel-score h4 { color: var(--accent-amber); }
+
+        .score-main { font-size: 1.15rem; font-weight: 600; color: #fefce8; }
+        .score-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: rgba(248, 250, 252, 0.85); }
+        .score-note { font-size: 0.85rem; color: var(--text-tertiary); margin-top: 4px; }
+
+        .company-info-loading { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 0.95rem; }
+
+        .retry-row { margin-top: 14px; display: flex; justify-content: flex-end; }
+
+        .news-cell { max-width: 300px; font-size: 0.9rem; color: var(--text-secondary); }
+        .insider-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(163, 113, 247, 0.35); }
+        .amount-cell { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-weight: 500; font-size: 0.95rem; }
+
+        @media (max-width: 1024px) { .company-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 768px) {
+            .app-container { padding: 16px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .button-row { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .date-row-container { flex-direction: column; align-items: center; }
+            .company-panels { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-gradient-bar"></div>
+    <div class="app-container">
+        <!-- DIP TRACKER PAGE -->
+        <div id="page-comparison" class="page active">
+            <header class="page-header-bar">
+                <span class="page-header-title">Dip Tracker</span>
+            </header>
+            <div class="page-header">
+                <p class="page-subtitle">Parse, compare, and track buy-the-dip entries with real-time prices.</p>
+            </div>
+            <div class="input-grid">
+                <div class="card input-full">
+                    <div class="date-row-container">
+                        <div class="date-picker-row">
+                            <label for="dataDate">Data Date</label>
+                            <input type="date" id="dataDate">
+                        </div>
+                        <div class="page-nav-tabs">
+                            <button class="page-nav-tab active" onclick="showPage('comparison')" id="nav1-comparison">Dip Tracker</button>
+                            <button class="page-nav-tab" onclick="showPage('insider')" id="nav1-insider">Insider Tracker</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                        <span class="card-title">Data Set 1</span>
+                    </div>
+                    <textarea id="dataset1" placeholder="Paste your first data set here..."></textarea>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                        <span class="card-title">Data Set 2</span>
+                    </div>
+                    <textarea id="dataset2" placeholder="Paste your second data set here..."></textarea>
+                </div>
+            </div>
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="compareAndParse()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Compare & Parse</button>
+                <button class="btn btn-secondary" onclick="refreshPrices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh Prices</button>
+                <button class="btn btn-danger" onclick="clearAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Clear All</button>
+                <button class="btn btn-success" onclick="exportToCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+            </div>
+            <div id="statusMessage" class="status-message"></div>
+            <div class="results-card">
+                <div class="results-header"><h2 class="results-title">Results <span class="results-count" id="rowCount">0 rows</span></h2></div>
+                <div class="table-container">
+                    <table><thead><tr><th>#</th><th>Date</th><th>Ticker</th><th>Company Name</th><th>Price</th><th>Current Price</th><th>% Change</th><th></th></tr></thead><tbody id="resultsBody"></tbody></table>
+                </div>
+                <div id="emptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"/></svg>
+                    <p>No data yet. Paste your data sets above and click "Compare & Parse".</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIDER TRACKER PAGE -->
+        <div id="page-insider" class="page">
+            <header class="page-header-bar">
+                <span class="page-header-title">Insider Tracker</span>
+            </header>
+            <div class="page-header">
+                <p class="page-subtitle">Track insider buy signals from CEO Watcher alerts automatically.</p>
+            </div>
+            <div class="input-grid">
+                <div class="card input-full">
+                    <div class="date-row-container">
+                        <div class="date-picker-row"></div>
+                        <div class="page-nav-tabs">
+                            <button class="page-nav-tab" onclick="showPage('comparison')" id="nav2-comparison">Dip Tracker</button>
+                            <button class="page-nav-tab active" onclick="showPage('insider')" id="nav2-insider">Insider Tracker</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-row">
+                <button class="btn btn-purple" onclick="triggerInsiderGmailScan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Scan Gmail Now</button>
+                <button class="btn btn-secondary" onclick="refreshInsiderPrices()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh Prices</button>
+                <button class="btn btn-danger" onclick="clearInsiderData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Clear All</button>
+                <button class="btn btn-success" onclick="exportInsiderCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+            </div>
+            <div id="insiderStatusMessage" class="status-message"></div>
+            <div class="results-card">
+                <div class="results-header"><h2 class="results-title">Insider Buy Alerts <span class="results-count" id="insiderRowCount">0 rows</span></h2></div>
+                <div class="table-container">
+                    <table><thead><tr><th>#</th><th>Date</th><th>Ticker</th><th>Company</th><th>News</th><th>Insider</th><th>Amount</th><th>Alert Price</th><th>Current Price</th><th>% Change</th></tr></thead><tbody id="insiderResultsBody"></tbody></table>
+                </div>
+                <div id="insiderEmptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <p>No insider trades yet. Click "Scan Gmail Now" or wait for automatic daily import at 8am.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SHEETS_ID = '19WB8SI3DBXKIeqyfGn2W2ihRLdI6_F5C0dhEucYSoNs';
+        const GOOGLE_API_KEY = 'AIzaSyDzZYtdzU74EaBpYjo-e3kDdMaHmnN-2Uw';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUWr5tAmIpil3jb8n44nnbdlNoeLk0qMuqZrQO8uxJa2ANdOloe7aaBuVKz7QkJa7p/exec';
+
+        let grokCache = {};
+        let currentExpandedId = null;
+        let currentExpandedInsiderId = null;
+
+        const dateColors = [
+            'rgba(56, 139, 253, 0.20)', 'rgba(46, 160, 67, 0.20)', 'rgba(137, 87, 229, 0.20)',
+            'rgba(219, 171, 9, 0.20)', 'rgba(238, 87, 55, 0.20)', 'rgba(13, 170, 182, 0.20)',
+            'rgba(191, 74, 142, 0.20)', 'rgba(96, 125, 217, 0.20)', 'rgba(204, 120, 50, 0.20)',
+            'rgba(121, 184, 202, 0.20)', 'rgba(163, 113, 247, 0.20)', 'rgba(255, 123, 114, 0.20)',
+            'rgba(125, 201, 145, 0.20)', 'rgba(255, 166, 87, 0.20)', 'rgba(149, 157, 239, 0.20)',
+            'rgba(238, 145, 179, 0.20)', 'rgba(98, 205, 192, 0.20)', 'rgba(185, 152, 104, 0.20)',
+            'rgba(87, 171, 90, 0.20)', 'rgba(175, 140, 200, 0.20)'
+        ];
+        let dateColorMap = {}, colorIndex = 0;
+        function getDateColor(date) { if (!dateColorMap[date]) { dateColorMap[date] = dateColors[colorIndex++ % dateColors.length]; } return dateColorMap[date]; }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            document.querySelectorAll('.page-nav-tab').forEach(t => t.classList.remove('active'));
+            if (page === 'comparison') { document.getElementById('nav1-comparison').classList.add('active'); document.getElementById('nav2-comparison').classList.add('active'); }
+            else { document.getElementById('nav1-insider').classList.add('active'); document.getElementById('nav2-insider').classList.add('active'); }
+            if (page === 'insider') loadInsiderData();
+        }
+
+        let parsedData = [], rowIdCounter = 0, insiderData = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dataDate').value = new Date().toISOString().split('T')[0];
+            await loadGrokCache();
+            await loadFromGoogleSheets();
+        });
+
+        function showStatus(msg, type) { const el = document.getElementById('statusMessage'); el.textContent = msg; el.className = 'status-message status-' + type; setTimeout(() => el.className = 'status-message', 5000); }
+        function showInsiderStatus(msg, type) { const el = document.getElementById('insiderStatusMessage'); el.textContent = msg; el.className = 'status-message status-' + type; setTimeout(() => el.className = 'status-message', 5000); }
+
+        async function apiCall(action, data = {}) {
+            try {
+                const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action, ...data }) });
+                return await res.json();
+            } catch (e) { console.error('API call error:', e); return { error: e.toString() }; }
+        }
+
+        async function loadGrokCache() {
+            try {
+                const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/GrokAnalysis?key=${GOOGLE_API_KEY}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const rows = data.values || [];
+                const dataRows = rows.length > 0 && rows[0][0] === 'ticker' ? rows.slice(1) : rows;
+                dataRows.forEach(row => {
+                    if (!row[0]) return;
+                    const ticker = row[0].toUpperCase();
+                    grokCache[ticker] = { grokSector: row[1] || '', grokWhatItDoes: row[2] || '', grokBottomLine: row[3] || '', grokBuyTheDip: row[4] || '', lastUpdated: row[5] || '' };
+                });
+            } catch (e) { console.log('No Grok cache yet'); }
+        }
+
+        async function getStockPrice(ticker) { const result = await apiCall('getStockPrice', { ticker }); return result.price || null; }
+        async function getCompanyInfo(ticker) { return await apiCall('getCompanyInfo', { ticker }); }
+        async function getGrokAnalysis(ticker, forceRefresh = false) {
+            ticker = ticker.toUpperCase();
+            if (!forceRefresh && grokCache[ticker]) return grokCache[ticker];
+            const result = await apiCall('getGrokAnalysis', { ticker, forceRefresh });
+            if (result && !result.error) grokCache[ticker] = result;
+            return result;
+        }
+
+        async function loadFromGoogleSheets() {
+            try {
+                showStatus('Loading...', 'info');
+                const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/Sheet1?key=${GOOGLE_API_KEY}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const rows = data.values || [];
+                    const dataRows = rows.length > 0 && rows[0][0] === 'id' ? rows.slice(1) : rows;
+                    if (dataRows.length > 0) {
+                        parsedData = dataRows.map(row => ({ id: parseInt(row[0]) || ++rowIdCounter, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', price: parseFloat(row[4]) || 0, currentPrice: row[5] ? (row[5] === 'manual' ? 'manual' : parseFloat(row[5])) : null, expanded: false, companyInfo: null }));
+                        rowIdCounter = Math.max(...parsedData.map(d => d.id), 0);
+                        renderTable();
+                        showStatus(`Loaded ${parsedData.length} rows`, 'success');
+                        fetchCurrentPrices(parsedData.filter(item => item.currentPrice === null));
+                    } else { renderTable(); showStatus('Ready', 'info'); }
+                }
+            } catch (e) { showStatus('Connection error', 'error'); }
+        }
+
+        async function saveToGoogleSheets() {
+            try {
+                const header = ['id', 'date', 'ticker', 'companyName', 'price', 'currentPrice'];
+                const rows = parsedData.map(item => [item.id, item.date, item.ticker, item.companyName, item.price, item.currentPrice === null ? '' : item.currentPrice]);
+                await apiCall('saveStockData', { data: [header, ...rows] });
+            } catch (e) {}
+        }
+        let saveTimeout = null;
+        function autoSave() { if (saveTimeout) clearTimeout(saveTimeout); saveTimeout = setTimeout(saveToGoogleSheets, 1000); }
+
+        async function fetchCurrentPrices(items) {
+            if (!items || items.length === 0) return;
+            for (const item of items) { const price = await getStockPrice(item.ticker); item.currentPrice = price || 'manual'; renderTable(); await new Promise(r => setTimeout(r, 150)); }
+            autoSave();
+        }
+
+        function parseDataSet(rawData) {
+            const results = []; let data = rawData.trim(); if (!data) return results;
+            const marketCapPattern = /(\d{1,3}(?:,\d{3})*)\s*M(?=\s*[A-Z]|$)/g;
+            let match; const positions = [];
+            while ((match = marketCapPattern.exec(data)) !== null) { positions.push({ end: match.index + match[0].length }); }
+            let startPos = 0; const segments = [];
+            for (const pos of positions) { segments.push(data.substring(startPos, pos.end).trim()); startPos = pos.end; }
+            if (segments.length === 0) segments.push(data);
+            if (startPos < data.length) { const remaining = data.substring(startPos).trim(); if (remaining && remaining !== 'M') segments.push(remaining); }
+            for (const segment of segments) { const parsed = parseRecord(segment); if (parsed) results.push(parsed); }
+            return results;
+        }
+
+        function parseRecord(record) {
+            record = record.trim().replace(/\s*M\s*$/, '');
+            const tokens = record.split(/\s+/); if (tokens.length < 4) return null;
+            let ticker = tokens[0], priceIndex = -1;
+            for (let i = 1; i < tokens.length; i++) { if (/^\d*\.?\d+$/.test(tokens[i]) && tokens[i].includes('.')) { priceIndex = i; break; } }
+            if (priceIndex === -1) return null;
+            return { ticker, companyName: tokens.slice(1, priceIndex).join(' '), price: parseFloat(tokens[priceIndex]) };
+        }
+
+        function compareAndParse() {
+            const dataset1 = document.getElementById('dataset1').value;
+            const dataset2 = document.getElementById('dataset2').value;
+            const selectedDate = document.getElementById('dataDate').value;
+            if (!dataset1 || !dataset2) { showStatus('Paste data in both sets', 'error'); return; }
+            if (!selectedDate) { showStatus('Select a date', 'error'); return; }
+            const set1 = parseDataSet(dataset1), set2 = parseDataSet(dataset2);
+            if (set1.length === 0 || set2.length === 0) { showStatus('Could not parse data', 'error'); return; }
+            const set2Tickers = new Set();
+            for (const item of set2) { let ticker = item.ticker; if (ticker.startsWith('M') && ticker.length > 1) set2Tickers.add(ticker.substring(1)); set2Tickers.add(ticker); }
+            const commonItems = [], addedTickers = new Set();
+            for (const item of set1) {
+                let cleanTicker = item.ticker;
+                if (cleanTicker.startsWith('M') && cleanTicker.length > 1) { const withoutM = cleanTicker.substring(1); if (set2Tickers.has(withoutM)) cleanTicker = withoutM; }
+                if ((set2Tickers.has(cleanTicker) || set2Tickers.has('M' + cleanTicker)) && !addedTickers.has(cleanTicker)) {
+                    addedTickers.add(cleanTicker);
+                    commonItems.push({ ticker: cleanTicker, companyName: item.companyName, price: item.price, date: selectedDate, id: ++rowIdCounter, currentPrice: null });
+                }
+            }
+            if (commonItems.length === 0) { showStatus('No common tickers', 'error'); return; }
+            parsedData = parsedData.concat(commonItems);
+            document.getElementById('dataset1').value = '';
+            document.getElementById('dataset2').value = '';
+            showStatus(`Found ${commonItems.length} ticker(s)`, 'success');
+            renderTable(); fetchCurrentPrices(commonItems); autoSave();
+        }
+
+        function calculateChange(original, current) { if (current === null || current === 'manual' || isNaN(current)) return null; return ((current - original) / original) * 100; }
+
+        function renderTable() {
+            const tbody = document.getElementById('resultsBody');
+            const emptyState = document.getElementById('emptyState');
+            document.getElementById('rowCount').textContent = `${parsedData.length} rows`;
+            if (parsedData.length === 0) { tbody.innerHTML = ''; emptyState.style.display = 'block'; return; }
+            emptyState.style.display = 'none';
+            tbody.innerHTML = parsedData.map((item, index) => {
+                const change = calculateChange(item.price, item.currentPrice);
+                const changeClass = change !== null ? (change >= 0 ? 'change-positive' : 'change-negative') : '';
+                const changeText = change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%` : '—';
+                let currentPriceText, currentPriceClass = '';
+                if (item.currentPrice === null) { currentPriceText = '<span class="loading"></span>'; }
+                else if (item.currentPrice === 'manual') { currentPriceText = `<input type="number" step="0.01" class="price-input" placeholder="Enter" onchange="updateCurrentPrice(${item.id}, this.value)">`; }
+                else { currentPriceClass = item.currentPrice >= item.price ? 'price-positive' : 'price-negative'; currentPriceText = `$${parseFloat(item.currentPrice).toFixed(2)}`; }
+                const rowColor = getDateColor(item.date);
+                const isExpanded = currentExpandedId === item.id;
+                let html = `<tr style="background-color: ${rowColor};"><td>${index + 1}</td><td><input type="date" class="date-input" value="${item.date}" onchange="updateDate(${item.id}, this.value)"></td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleCompanyInfo(${item.id})">${item.ticker}</td><td>${item.companyName}</td><td class="price-cell">$${item.price.toFixed(2)}</td><td class="price-cell ${currentPriceClass}">${currentPriceText}</td><td class="${changeClass}">${changeText}</td><td><button class="btn-remove" onclick="removeRow(${item.id})">✕</button></td></tr>`;
+                if (isExpanded) { html += `<tr class="company-info-row" style="background-color: ${rowColor};"><td colspan="8"><div class="company-info-content">${item.companyInfo ? renderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`; }
+                return html;
+            }).join('');
+        }
+
+        function renderCompanyInfo(item) {
+            const info = item.companyInfo;
+            if (!info || info.error) {
+                return `<div class="company-info-layout"><div class="company-hero"><div class="company-hero-main"><div class="company-hero-ticker">${item.ticker}</div><div class="company-hero-name">${item.companyName || ''}</div></div><div class="company-hero-meta"><span class="company-hero-chip">Profile unavailable</span></div></div><div class="company-panels"><div class="company-panel company-panel-snapshot"><h4>Snapshot</h4><p style="color: var(--accent-red);">${info?.error || 'Unable to load company profile right now.'}</p></div><div class="company-panel company-panel-bottomline"><h4>Bottom Line</h4><p>AI analysis unavailable.</p></div><div class="company-panel company-panel-score"><h4>Buy the Dip</h4><div class="score-main">Wait</div><div class="score-sub">— % certainty</div></div></div><div class="retry-row"><button class="btn btn-retry btn-small" onclick="retryGrokAnalysis(${item.id}, 'dip')">⟳ Retry AI Analysis</button></div></div>`;
+            }
+            const snapshotText = info.grokWhatItDoes || info.description || 'No description available.';
+            const bottomlineText = info.grokBottomLine || 'AI bottom line not yet available for this ticker.';
+            const verdictRaw = info.grokBuyTheDip || '';
+            let verdict = 'Wait', percent = '—', verdictClass = '';
+            if (verdictRaw) { const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\d]*([\d]{1,3})%/i); if (match) { verdict = match[1].toUpperCase(); percent = match[2] + '%'; } if (verdict === 'YES') verdictClass = 'verdict-yes'; else if (verdict === 'NO') verdictClass = 'verdict-no'; }
+            return `<div class="company-info-layout"><div class="company-hero"><div class="company-hero-main"><div class="company-hero-ticker">${item.ticker}</div><div class="company-hero-name">${item.companyName || ''}</div></div><div class="company-hero-meta">${info.grokSector ? `<span class="company-hero-chip">${info.grokSector}</span>` : ''}${info.industry ? `<span class="company-hero-chip">${info.industry}</span>` : ''}${info.exchange ? `<span class="company-hero-chip">${info.exchange}</span>` : ''}</div></div><div class="company-panels"><div class="company-panel company-panel-snapshot"><h4>Snapshot</h4><p>${snapshotText}</p>${info.weburl ? `<p style="margin-top:10px;"><a href="${info.weburl}" target="_blank">🌐 Website</a></p>` : ''}</div><div class="company-panel company-panel-bottomline"><h4>Bottom Line</h4><p>${bottomlineText}</p></div><div class="company-panel company-panel-score ${verdictClass}"><h4>Buy the Dip</h4><div class="score-main">${verdict}</div><div class="score-sub">${percent} certainty</div></div></div><div class="retry-row"><button class="btn btn-retry btn-small" onclick="retryGrokAnalysis(${item.id}, 'dip')">⟳ Retry AI Analysis</button></div></div>`;
+        }
+
+        async function toggleCompanyInfo(id) {
+            const item = parsedData.find(d => d.id === id);
+            if (!item) return;
+            if (currentExpandedId === id) { currentExpandedId = null; renderTable(); return; }
+            currentExpandedId = id;
+            renderTable();
+            if (!item.companyInfo) await fetchCompanyInfo(item);
+        }
+
+        async function fetchCompanyInfo(item) {
+            let info = {};
+            const companyData = await getCompanyInfo(item.ticker);
+            if (companyData && !companyData.error) { Object.assign(info, companyData); }
+            const grokData = await getGrokAnalysis(item.ticker);
+            if (grokData && !grokData.error) { info.grokSector = grokData.grokSector; info.grokWhatItDoes = grokData.grokWhatItDoes; info.grokBottomLine = grokData.grokBottomLine; info.grokBuyTheDip = grokData.grokBuyTheDip; }
+            else if (grokData?.error) { info.error = grokData.error; }
+            item.companyInfo = Object.keys(info).length ? info : { error: 'Unable to load' };
+            renderTable();
+        }
+
+        async function retryGrokAnalysis(id, type) {
+            const dataArray = type === 'dip' ? parsedData : insiderData;
+            const item = dataArray.find(d => d.id === id);
+            if (!item) return;
+            item.companyInfo = null;
+            if (type === 'dip') renderTable(); else renderInsiderTable();
+            let info = {};
+            const companyData = await getCompanyInfo(item.ticker);
+            if (companyData && !companyData.error) { Object.assign(info, companyData); }
+            const grokData = await getGrokAnalysis(item.ticker, true);
+            if (grokData && !grokData.error) { info.grokSector = grokData.grokSector; info.grokWhatItDoes = grokData.grokWhatItDoes; info.grokBottomLine = grokData.grokBottomLine; info.grokBuyTheDip = grokData.grokBuyTheDip; }
+            else if (grokData?.error) { info.error = grokData.error; }
+            item.companyInfo = Object.keys(info).length ? info : { error: 'Unable to load' };
+            if (type === 'dip') renderTable(); else renderInsiderTable();
+        }
+
+        function updateDate(id, newDate) { const item = parsedData.find(d => d.id === id); if (item) { item.date = newDate; renderTable(); autoSave(); } }
+        function updateCurrentPrice(id, newPrice) { const item = parsedData.find(d => d.id === id); if (item && newPrice) { item.currentPrice = parseFloat(newPrice); renderTable(); autoSave(); } }
+        function removeRow(id) { parsedData = parsedData.filter(d => d.id !== id); if (currentExpandedId === id) currentExpandedId = null; renderTable(); showStatus('Removed', 'info'); autoSave(); }
+        function clearAll() { if (parsedData.length === 0) { showStatus('Nothing to clear', 'error'); return; } if (confirm('Clear all data?')) { parsedData = []; currentExpandedId = null; renderTable(); showStatus('Cleared', 'info'); autoSave(); } }
+        function refreshPrices() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } showStatus('Refreshing...', 'info'); parsedData.forEach(item => item.currentPrice = null); renderTable(); fetchCurrentPrices(parsedData); }
+        function exportToCSV() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } const headers = ['#', 'Date', 'Ticker', 'Company', 'Price', 'Current', '% Change']; const rows = parsedData.map((item, i) => { const change = calculateChange(item.price, item.currentPrice); return [i + 1, item.date, item.ticker, `"${item.companyName}"`, item.price, item.currentPrice || '', change ? change.toFixed(2) + '%' : ''].join(','); }); downloadCSV([headers.join(','), ...rows].join('\n'), 'dip_tracker'); }
+        function downloadCSV(csv, name) { const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${name}_${new Date().toISOString().split('T')[0]}.csv`; link.click(); showStatus('Exported', 'success'); }
+
+        // ===== INSIDER TRACKER =====
+        async function loadInsiderData() {
+            try {
+                showInsiderStatus('Loading...', 'info');
+                const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/InsiderTrades?key=${GOOGLE_API_KEY}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const rows = data.values || [];
+                    const dataRows = rows.length > 0 && rows[0][0] === 'id' ? rows.slice(1) : rows;
+                    if (dataRows.length > 0) {
+                        insiderData = dataRows.map(row => ({ id: parseInt(row[0]) || 0, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', news: row[4] || '', insider: row[5] || '', amount: row[6] || '', alertPrice: row[7] ? parseFloat(row[7]) : null, currentPrice: row[8] ? parseFloat(row[8]) : null, expanded: false, companyInfo: null }));
+                        renderInsiderTable();
+                        showInsiderStatus(`Loaded ${insiderData.length} trades`, 'success');
+                        fetchInsiderPrices();
+                    } else { renderInsiderTable(); showInsiderStatus('No trades yet', 'info'); }
+                }
+            } catch (e) { showInsiderStatus('Connection error', 'error'); }
+        }
+
+        async function fetchInsiderPrices() {
+            for (const item of insiderData) {
+                if (item.currentPrice === null || isNaN(item.currentPrice)) { const price = await getStockPrice(item.ticker); if (price) item.currentPrice = price; renderInsiderTable(); await new Promise(r => setTimeout(r, 150)); }
+            }
+        }
+
+        function refreshInsiderPrices() { if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; } showInsiderStatus('Refreshing...', 'info'); insiderData.forEach(item => item.currentPrice = null); renderInsiderTable(); fetchInsiderPrices(); }
+
+        async function triggerInsiderGmailScan() {
+            showInsiderStatus('Scanning Gmail for new insider alerts…', 'info');
+            try {
+                const result = await apiCall('fetchInsiderFromGmail');
+                setTimeout(async () => {
+                    await loadInsiderData();
+                    const msg = result.newTrades > 0 ? `Gmail scan complete. ${result.newTrades} new trade(s) added.` : `Gmail scan complete. No new trades found.`;
+                    showInsiderStatus(msg, 'success');
+                }, 2000);
+            } catch (e) { showInsiderStatus('Error triggering Gmail scan', 'error'); }
+        }
+
+        async function clearInsiderData() {
+            if (insiderData.length === 0) { showInsiderStatus('Nothing to clear', 'error'); return; }
+            if (!confirm('Clear all insider data?')) return;
+            showInsiderStatus('Clearing...', 'info');
+            const result = await apiCall('clearInsiderData');
+            if (result.success) { insiderData = []; currentExpandedInsiderId = null; renderInsiderTable(); showInsiderStatus('All insider data cleared', 'success'); }
+            else { showInsiderStatus('Error clearing data', 'error'); }
+        }
+
+        async function toggleInsiderCompanyInfo(id) {
+            const item = insiderData.find(d => d.id === id);
+            if (!item) return;
+            if (currentExpandedInsiderId === id) { currentExpandedInsiderId = null; renderInsiderTable(); return; }
+            currentExpandedInsiderId = id;
+            renderInsiderTable();
+            if (!item.companyInfo) await fetchInsiderCompanyInfo(item);
+        }
+
+        async function fetchInsiderCompanyInfo(item) {
+            let info = {};
+            const companyData = await getCompanyInfo(item.ticker);
+            if (companyData && !companyData.error) { Object.assign(info, companyData); }
+            const grokData = await getGrokAnalysis(item.ticker);
+            if (grokData && !grokData.error) { info.grokSector = grokData.grokSector; info.grokWhatItDoes = grokData.grokWhatItDoes; info.grokBottomLine = grokData.grokBottomLine; info.grokBuyTheDip = grokData.grokBuyTheDip; }
+            else if (grokData?.error) { info.error = grokData.error; }
+            item.companyInfo = Object.keys(info).length ? info : { error: 'Unable to load' };
+            renderInsiderTable();
+        }
+
+        function renderInsiderCompanyInfo(item) {
+            const info = item.companyInfo;
+            if (!info || info.error) {
+                return `<div class="company-info-layout"><div class="company-hero"><div class="company-hero-main"><div class="company-hero-ticker">${item.ticker}</div><div class="company-hero-name">${item.companyName || ''}</div></div><div class="company-hero-meta"><span class="company-hero-chip">Profile unavailable</span></div></div><div class="company-panels"><div class="company-panel company-panel-snapshot"><h4>Snapshot</h4><p style="color: var(--accent-red);">${info?.error || 'Unable to load company profile.'}</p></div><div class="company-panel company-panel-bottomline"><h4>Bottom Line</h4><p>AI analysis unavailable.</p></div><div class="company-panel company-panel-score"><h4>Buy the Dip</h4><div class="score-main">Wait</div><div class="score-sub">— % certainty</div></div></div><div class="retry-row"><button class="btn btn-retry btn-small" onclick="retryGrokAnalysis(${item.id}, 'insider')">⟳ Retry AI Analysis</button></div></div>`;
+            }
+            const snapshotText = info.grokWhatItDoes || info.description || 'No description available.';
+            const bottomlineText = info.grokBottomLine || 'AI bottom line not yet available.';
+            const verdictRaw = info.grokBuyTheDip || '';
+            let verdict = 'Wait', percent = '—', verdictClass = '';
+            if (verdictRaw) { const match = verdictRaw.match(/(Yes|No|Maybe|Wait)[^\d]*([\d]{1,3})%/i); if (match) { verdict = match[1].toUpperCase(); percent = match[2] + '%'; } if (verdict === 'YES') verdictClass = 'verdict-yes'; else if (verdict === 'NO') verdictClass = 'verdict-no'; }
+            return `<div class="company-info-layout"><div class="company-hero"><div class="company-hero-main"><div class="company-hero-ticker">${item.ticker}</div><div class="company-hero-name">${item.companyName || ''}</div></div><div class="company-hero-meta">${info.grokSector ? `<span class="company-hero-chip">${info.grokSector}</span>` : ''}${info.industry ? `<span class="company-hero-chip">${info.industry}</span>` : ''}${info.exchange ? `<span class="company-hero-chip">${info.exchange}</span>` : ''}</div></div><div class="company-panels"><div class="company-panel company-panel-snapshot"><h4>Snapshot</h4><p>${snapshotText}</p>${info.weburl ? `<p style="margin-top:10px;"><a href="${info.weburl}" target="_blank">🌐 Website</a></p>` : ''}</div><div class="company-panel company-panel-bottomline"><h4>Bottom Line</h4><p>${bottomlineText}</p></div><div class="company-panel company-panel-score ${verdictClass}"><h4>Buy the Dip</h4><div class="score-main">${verdict}</div><div class="score-sub">${percent} certainty</div></div></div><div class="retry-row"><button class="btn btn-retry btn-small" onclick="retryGrokAnalysis(${item.id}, 'insider')">⟳ Retry AI Analysis</button></div></div>`;
+        }
+
+        function renderInsiderTable() {
+            const tbody = document.getElementById('insiderResultsBody');
+            const emptyState = document.getElementById('insiderEmptyState');
+            document.getElementById('insiderRowCount').textContent = `${insiderData.length} rows`;
+            if (insiderData.length === 0) { tbody.innerHTML = ''; emptyState.style.display = 'block'; return; }
+            emptyState.style.display = 'none';
+            tbody.innerHTML = insiderData.map((item, index) => {
+                const change = item.alertPrice && item.currentPrice ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100 : null;
+                const changeClass = change !== null ? (change >= 0 ? 'change-positive' : 'change-negative') : '';
+                const changeText = change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%` : '—';
+                let currentPriceClass = '';
+                if (item.currentPrice && item.alertPrice) { currentPriceClass = item.currentPrice >= item.alertPrice ? 'price-positive' : 'price-negative'; }
+                const isExpanded = currentExpandedInsiderId === item.id;
+                // NO background color for insider rows
+                let html = `<tr><td>${index + 1}</td><td>${item.date}</td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}</td><td>${item.companyName}</td><td class="news-cell">${item.news}</td><td>${item.insider ? `<span class="insider-badge">${item.insider}</span>` : '—'}</td><td class="amount-cell">${item.amount || '—'}</td><td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td><td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td><td class="${changeClass}">${changeText}</td></tr>`;
+                if (isExpanded) { html += `<tr class="company-info-row"><td colspan="10"><div class="company-info-content">${item.companyInfo ? renderInsiderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`; }
+                return html;
+            }).join('');
+        }
+
+        function exportInsiderCSV() {
+            if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; }
+            const headers = ['#', 'Date', 'Ticker', 'Company', 'News', 'Insider', 'Amount', 'Alert Price', 'Current', '% Change'];
+            const rows = insiderData.map((item, i) => { const change = item.alertPrice && item.currentPrice ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100 : null; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, `"${item.news}"`, item.insider, item.amount, item.alertPrice || '', item.currentPrice || '', change ? change.toFixed(2) + '%' : ''].join(','); });
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'insider_trades');
+        }
+    </script>
+</body>
+</html>
