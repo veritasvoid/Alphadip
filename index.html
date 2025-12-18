@@ -289,6 +289,18 @@
         .external-link-btn:hover { background: rgba(88, 166, 255, 0.18); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2); }
         .external-link-btn svg { width: 14px; height: 14px; }
 
+        .ai-progress-bar {
+            display: none; align-items: center; gap: 10px; padding: 10px 16px; margin-bottom: 16px;
+            background: rgba(163, 113, 247, 0.1); border: 1px solid rgba(163, 113, 247, 0.3);
+            border-radius: 10px; font-size: 0.85rem; color: var(--accent-purple);
+        }
+        .ai-progress-bar.active { display: flex; }
+        .ai-progress-bar .loading { border-top-color: var(--accent-purple); }
+        .ai-progress-text { flex: 1; }
+        .ai-progress-count { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .ai-done-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(63, 185, 80, 0.15); border: 1px solid rgba(63, 185, 80, 0.4); border-radius: 6px; font-size: 0.7rem; color: var(--accent-green); margin-left: 6px; }
+        .ai-done-badge svg { width: 10px; height: 10px; }
+
         .news-cell { max-width: 300px; font-size: 0.9rem; color: var(--text-secondary); }
         .insider-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(163, 113, 247, 0.35); }
         .amount-cell { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-weight: 500; font-size: 0.95rem; }
@@ -337,6 +349,10 @@
                 <button class="btn btn-success" onclick="exportToCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
             </div>
             <div id="statusMessage" class="status-message"></div>
+            <div id="dipAiProgress" class="ai-progress-bar">
+                <span class="loading"></span>
+                <span class="ai-progress-text">Running AI analysis... <span class="ai-progress-count" id="dipAiCount">0/0</span></span>
+            </div>
             <div class="results-card">
                 <div class="results-header">
                     <h2 class="results-title">Results <span class="results-count" id="rowCount">0 rows</span></h2>
@@ -379,6 +395,10 @@
                 <button class="btn btn-success" onclick="exportInsiderCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
             </div>
             <div id="insiderStatusMessage" class="status-message"></div>
+            <div id="insiderAiProgress" class="ai-progress-bar">
+                <span class="loading"></span>
+                <span class="ai-progress-text">Running AI analysis... <span class="ai-progress-count" id="insiderAiCount">0/0</span></span>
+            </div>
             <div class="results-card">
                 <div class="results-header">
                     <h2 class="results-title">Insider Buy Alerts <span class="results-count" id="insiderRowCount">0 rows</span></h2>
@@ -409,6 +429,7 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUWr5tAmIpil3jb8n44nnbdlNoeLk0qMuqZrQO8uxJa2ANdOloe7aaBuVKz7QkJa7p/exec';
 
         let grokCache = {}, currentExpandedId = null, currentExpandedInsiderId = null;
+        let aiAnalysisQueue = [], isAnalyzing = false;
         let dipSortColumn = 'date', dipSortDirection = 'desc';
         let insiderSortColumn = 'date', insiderSortDirection = 'desc';
         let dipSearchTerm = '', insiderSearchTerm = '';
@@ -491,6 +512,7 @@
                         renderTable();
                         showStatus(`Loaded ${parsedData.length} rows`, 'success');
                         fetchCurrentPrices(parsedData.filter(item => item.currentPrice === null));
+                        startDipAiAnalysis();
                     } else { renderTable(); showStatus('Ready', 'info'); }
                 }
             } catch (e) { showStatus('Connection error', 'error'); }
@@ -508,6 +530,89 @@
             if (!items || items.length === 0) return;
             for (const item of items) { const price = await getStockPrice(item.ticker); item.currentPrice = price || 'manual'; renderTable(); await new Promise(r => setTimeout(r, 150)); }
             autoSave();
+        }
+
+        // Background AI Analysis
+        async function runBackgroundAiAnalysis(dataArray, type = 'dip') {
+            const progressEl = document.getElementById(type === 'dip' ? 'dipAiProgress' : 'insiderAiProgress');
+            const countEl = document.getElementById(type === 'dip' ? 'dipAiCount' : 'insiderAiCount');
+            
+            // Get unique tickers that need analysis (not already in cache)
+            const tickersToAnalyze = [];
+            const seenTickers = new Set();
+            for (const item of dataArray) {
+                const ticker = item.ticker.toUpperCase();
+                if (!seenTickers.has(ticker) && !grokCache[ticker]) {
+                    seenTickers.add(ticker);
+                    tickersToAnalyze.push({ ticker, item });
+                }
+            }
+            
+            if (tickersToAnalyze.length === 0) {
+                // All tickers already analyzed, populate companyInfo from cache
+                for (const item of dataArray) {
+                    if (!item.companyInfo && grokCache[item.ticker.toUpperCase()]) {
+                        item.companyInfo = { ...grokCache[item.ticker.toUpperCase()] };
+                    }
+                }
+                if (type === 'dip') renderTable(); else renderInsiderTable();
+                return;
+            }
+            
+            // Show progress bar
+            progressEl.classList.add('active');
+            let completed = 0;
+            countEl.textContent = `${completed}/${tickersToAnalyze.length}`;
+            
+            for (const { ticker, item } of tickersToAnalyze) {
+                try {
+                    // Fetch company info and Grok analysis
+                    let info = {};
+                    const companyData = await getCompanyInfo(ticker);
+                    if (companyData && !companyData.error) Object.assign(info, companyData);
+                    
+                    const grokData = await getGrokAnalysis(ticker);
+                    if (grokData && !grokData.error) {
+                        info.grokSector = grokData.grokSector;
+                        info.grokWhatItDoes = grokData.grokWhatItDoes;
+                        info.grokBottomLine = grokData.grokBottomLine;
+                        info.grokBuyTheDip = grokData.grokBuyTheDip;
+                    }
+                    
+                    // Update all items with this ticker
+                    for (const d of dataArray) {
+                        if (d.ticker.toUpperCase() === ticker) {
+                            d.companyInfo = Object.keys(info).length ? info : { error: 'Unable to load' };
+                        }
+                    }
+                    
+                    completed++;
+                    countEl.textContent = `${completed}/${tickersToAnalyze.length}`;
+                    if (type === 'dip') renderTable(); else renderInsiderTable();
+                    
+                    // Small delay to avoid rate limiting
+                    await new Promise(r => setTimeout(r, 500));
+                } catch (e) {
+                    console.error('AI analysis error for', ticker, e);
+                    completed++;
+                    countEl.textContent = `${completed}/${tickersToAnalyze.length}`;
+                }
+            }
+            
+            // Hide progress bar
+            progressEl.classList.remove('active');
+        }
+
+        function startDipAiAnalysis() {
+            if (parsedData.length > 0) {
+                setTimeout(() => runBackgroundAiAnalysis(parsedData, 'dip'), 1000);
+            }
+        }
+
+        function startInsiderAiAnalysis() {
+            if (insiderData.length > 0) {
+                setTimeout(() => runBackgroundAiAnalysis(insiderData, 'insider'), 1000);
+            }
         }
 
         function parseDataSet(rawData) {
@@ -557,6 +662,7 @@
             document.getElementById('dataset2').value = '';
             showStatus(`Found ${commonItems.length} ticker(s)`, 'success');
             renderTable(); fetchCurrentPrices(commonItems); autoSave();
+            runBackgroundAiAnalysis(commonItems, 'dip');
         }
 
         function calculateChange(original, current) { if (current === null || current === 'manual' || isNaN(current)) return null; return ((current - original) / original) * 100; }
@@ -626,7 +732,9 @@
                 const isExpanded = currentExpandedId === item.id;
                 const hasInsiderMatch = insiderTickerSet.has(item.ticker.toUpperCase());
                 const matchBadge = hasInsiderMatch ? '<span class="insider-match" title="Also in Insider Tracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
-                let html = `<tr style="background-color: ${rowColor};"><td>${index + 1}</td><td><input type="date" class="date-input" value="${item.date}" onchange="updateDate(${item.id}, this.value)"></td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleCompanyInfo(${item.id})">${item.ticker}${matchBadge}</td><td>${item.companyName}</td><td class="price-cell">$${item.price.toFixed(2)}</td><td class="price-cell ${currentPriceClass}">${currentPriceText}</td><td class="${changeClass}">${changeText}</td><td><button class="btn-remove" onclick="removeRow(${item.id})">✕</button></td></tr>`;
+                const hasAiAnalysis = item.companyInfo || grokCache[item.ticker.toUpperCase()];
+                const aiBadge = hasAiAnalysis ? '<span class="ai-done-badge" title="AI Analysis Ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AI</span>' : '';
+                let html = `<tr style="background-color: ${rowColor};"><td>${index + 1}</td><td><input type="date" class="date-input" value="${item.date}" onchange="updateDate(${item.id}, this.value)"></td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleCompanyInfo(${item.id})">${item.ticker}${matchBadge}${aiBadge}</td><td>${item.companyName}</td><td class="price-cell">$${item.price.toFixed(2)}</td><td class="price-cell ${currentPriceClass}">${currentPriceText}</td><td class="${changeClass}">${changeText}</td><td><button class="btn-remove" onclick="removeRow(${item.id})">✕</button></td></tr>`;
                 if (isExpanded) html += `<tr class="company-info-row" style="background-color: ${rowColor};"><td colspan="8"><div class="company-info-content">${item.companyInfo ? renderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
                 return html;
             }).join('');
@@ -715,6 +823,7 @@
                         renderInsiderTable();
                         showInsiderStatus(`Loaded ${insiderData.length} trades`, 'success');
                         fetchInsiderPrices();
+                        startInsiderAiAnalysis();
                     } else { renderInsiderTable(); showInsiderStatus('No trades yet', 'info'); }
                 }
             } catch (e) { showInsiderStatus('Connection error', 'error'); }
@@ -792,7 +901,9 @@
                 let currentPriceClass = '';
                 if (item.currentPrice && item.alertPrice) currentPriceClass = item.currentPrice >= item.alertPrice ? 'price-positive' : 'price-negative';
                 const isExpanded = currentExpandedInsiderId === item.id;
-                let html = `<tr><td>${index + 1}</td><td>${item.date}</td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}</td><td>${item.companyName}</td><td class="news-cell">${item.news}</td><td>${item.insider ? `<span class="insider-badge">${item.insider}</span>` : '—'}</td><td class="amount-cell">${item.amount || '—'}</td><td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td><td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td><td class="${changeClass}">${changeText}</td></tr>`;
+                const hasAiAnalysis = item.companyInfo || grokCache[item.ticker.toUpperCase()];
+                const aiBadge = hasAiAnalysis ? '<span class="ai-done-badge" title="AI Analysis Ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AI</span>' : '';
+                let html = `<tr><td>${index + 1}</td><td>${item.date}</td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}${aiBadge}</td><td>${item.companyName}</td><td class="news-cell">${item.news}</td><td>${item.insider ? `<span class="insider-badge">${item.insider}</span>` : '—'}</td><td class="amount-cell">${item.amount || '—'}</td><td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td><td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td><td class="${changeClass}">${changeText}</td></tr>`;
                 if (isExpanded) html += `<tr class="company-info-row"><td colspan="10"><div class="company-info-content">${item.companyInfo ? renderInsiderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
                 return html;
             }).join('');
