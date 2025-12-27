@@ -509,7 +509,7 @@
                 const data = await res.json();
                 const rows = data.values || [];
                 const dataRows = rows.length > 0 && rows[0][0] === 'ticker' ? rows.slice(1) : rows;
-                dataRows.forEach(row => { if (!row[0]) return; const ticker = row[0].toUpperCase(); grokCache[ticker] = { grokSector: row[1] || '', grokWhatItDoes: row[2] || '', grokBottomLine: row[3] || '', grokBuyTheDip: row[4] || '', lastUpdated: row[5] || '' }; });
+                dataRows.forEach(row => { if (!row[0]) return; const ticker = row[0].toUpperCase(); grokCache[ticker] = { grokSector: row[1] || '', grokWhatItDoes: row[2] || '', grokBottomLine: row[3] || '', grokBuyTheDip: row[4] || '', lastUpdated: row[5] || '', ema200Status: row[6] || '' }; });
             } catch (e) {}
         }
 
@@ -521,10 +521,6 @@
             const result = await apiCall('getGrokAnalysis', { ticker, forceRefresh });
             if (result && !result.error) grokCache[ticker] = result;
             return result;
-        }
-        async function get200EMA(ticker) {
-            const result = await apiCall('get200EMA', { ticker });
-            return result.ema200Status || null; // returns 'above', 'below', or null
         }
 
         async function loadFromGoogleSheets() {
@@ -541,7 +537,6 @@
                         renderTable();
                         showStatus(`Loaded ${parsedData.length} rows`, 'success');
                         fetchCurrentPrices(parsedData.filter(item => item.currentPrice === null));
-                        fetch200EMAStatus(parsedData.filter(item => item.ema200Status === null));
                         startDipAiAnalysis();
                     } else { renderTable(); showStatus('Ready', 'info'); }
                 }
@@ -562,17 +557,6 @@
             autoSave();
         }
 
-        async function fetch200EMAStatus(items) {
-            if (!items || items.length === 0) return;
-            for (const item of items) {
-                const status = await get200EMA(item.ticker);
-                item.ema200Status = status || 'unknown';
-                renderTable();
-                await new Promise(r => setTimeout(r, 150));
-            }
-            autoSave();
-        }
-
         // Background AI Analysis
         async function runBackgroundAiAnalysis(dataArray, type = 'dip') {
             const progressEl = document.getElementById(type === 'dip' ? 'dipAiProgress' : 'insiderAiProgress');
@@ -590,10 +574,16 @@
             }
             
             if (tickersToAnalyze.length === 0) {
-                // All tickers already analyzed, populate companyInfo from cache
+                // All tickers already analyzed, populate companyInfo and ema200Status from cache
                 for (const item of dataArray) {
-                    if (!item.companyInfo && grokCache[item.ticker.toUpperCase()]) {
-                        item.companyInfo = { ...grokCache[item.ticker.toUpperCase()] };
+                    const cached = grokCache[item.ticker.toUpperCase()];
+                    if (cached) {
+                        if (!item.companyInfo) {
+                            item.companyInfo = { ...cached };
+                        }
+                        if (!item.ema200Status && cached.ema200Status) {
+                            item.ema200Status = cached.ema200Status;
+                        }
                     }
                 }
                 if (type === 'dip') renderTable(); else renderInsiderTable();
@@ -618,12 +608,17 @@
                         info.grokWhatItDoes = grokData.grokWhatItDoes;
                         info.grokBottomLine = grokData.grokBottomLine;
                         info.grokBuyTheDip = grokData.grokBuyTheDip;
+                        info.ema200Status = grokData.ema200Status;
                     }
-                    
+
                     // Update all items with this ticker
                     for (const d of dataArray) {
                         if (d.ticker.toUpperCase() === ticker) {
                             d.companyInfo = Object.keys(info).length ? info : { error: 'Unable to load' };
+                            // Update 200 EMA status from Grok analysis
+                            if (grokData && grokData.ema200Status) {
+                                d.ema200Status = grokData.ema200Status;
+                            }
                         }
                     }
                     
@@ -702,7 +697,7 @@
             document.getElementById('dataset1').value = '';
             document.getElementById('dataset2').value = '';
             showStatus(`Found ${commonItems.length} ticker(s)`, 'success');
-            renderTable(); fetchCurrentPrices(commonItems); fetch200EMAStatus(commonItems); autoSave();
+            renderTable(); fetchCurrentPrices(commonItems); autoSave();
             runBackgroundAiAnalysis(commonItems, 'dip');
         }
 
@@ -860,7 +855,7 @@
         function updateCurrentPrice(id, newPrice) { const item = parsedData.find(d => d.id === id); if (item && newPrice) { item.currentPrice = parseFloat(newPrice); renderTable(); autoSave(); } }
         function removeRow(id) { parsedData = parsedData.filter(d => d.id !== id); if (currentExpandedId === id) currentExpandedId = null; renderTable(); showStatus('Removed', 'info'); autoSave(); }
         function clearAll() { if (parsedData.length === 0) { showStatus('Nothing to clear', 'error'); return; } if (confirm('Clear all data?')) { parsedData = []; currentExpandedId = null; renderTable(); showStatus('Cleared', 'info'); autoSave(); } }
-        function refreshPrices() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } showStatus('Refreshing...', 'info'); parsedData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderTable(); fetchCurrentPrices(parsedData); fetch200EMAStatus(parsedData); }
+        function refreshPrices() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } showStatus('Refreshing...', 'info'); parsedData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderTable(); fetchCurrentPrices(parsedData); runBackgroundAiAnalysis(parsedData, 'dip'); }
         function exportToCSV() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } const headers = ['#', 'Date', 'Ticker', 'Company', 'Price', 'Current', '% Change', '200 EMA', 'Insider Match']; const sortedData = getSortedData(parsedData, dipSortColumn, dipSortDirection); const rows = sortedData.map((item, i) => { const change = calculateChange(item.price, item.currentPrice); const hasMatch = insiderTickerSet.has(item.ticker.toUpperCase()) ? 'Yes' : 'No'; const ema200 = item.ema200Status === 'above' ? 'Above' : item.ema200Status === 'below' ? 'Below' : '—'; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, item.price, item.currentPrice || '', change ? change.toFixed(2) + '%' : '', ema200, hasMatch].join(','); }); downloadCSV([headers.join(','), ...rows].join('\n'), 'dip_tracker'); }
         function downloadCSV(csv, name) { const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${name}_${new Date().toISOString().split('T')[0]}.csv`; link.click(); showStatus('Exported', 'success'); }
 
@@ -879,7 +874,6 @@
                         renderInsiderTable();
                         showInsiderStatus(`Loaded ${insiderData.length} trades`, 'success');
                         fetchInsiderPrices();
-                        fetchInsider200EMAStatus(insiderData.filter(item => item.ema200Status === null));
                         startInsiderAiAnalysis();
                     } else { renderInsiderTable(); showInsiderStatus('No trades yet', 'info'); }
                 }
@@ -892,17 +886,7 @@
             }
         }
 
-        async function fetchInsider200EMAStatus(items) {
-            if (!items || items.length === 0) return;
-            for (const item of items) {
-                const status = await get200EMA(item.ticker);
-                item.ema200Status = status || 'unknown';
-                renderInsiderTable();
-                await new Promise(r => setTimeout(r, 150));
-            }
-        }
-
-        function refreshInsiderPrices() { if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; } showInsiderStatus('Refreshing...', 'info'); insiderData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderInsiderTable(); fetchInsiderPrices(); fetchInsider200EMAStatus(insiderData); }
+        function refreshInsiderPrices() { if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; } showInsiderStatus('Refreshing...', 'info'); insiderData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderInsiderTable(); fetchInsiderPrices(); runBackgroundAiAnalysis(insiderData, 'insider'); }
 
         async function triggerInsiderGmailScan() {
             showInsiderStatus('Scanning Gmail for new insider alerts…', 'info');
