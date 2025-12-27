@@ -367,6 +367,7 @@
                         <th data-sort="price" onclick="sortDipTable('price')">Price</th>
                         <th data-sort="currentPrice" onclick="sortDipTable('currentPrice')">Current Price</th>
                         <th data-sort="change" onclick="sortDipTable('change')">% Change</th>
+                        <th data-sort="ema200" onclick="sortDipTable('ema200')">200 EMA</th>
                         <th class="no-sort"></th>
                     </tr></thead><tbody id="resultsBody"></tbody></table>
                 </div>
@@ -416,6 +417,7 @@
                         <th data-sort="alertPrice" onclick="sortInsiderTable('alertPrice')">Alert Price</th>
                         <th data-sort="currentPrice" onclick="sortInsiderTable('currentPrice')">Current Price</th>
                         <th data-sort="change" onclick="sortInsiderTable('change')">% Change</th>
+                        <th data-sort="ema200" onclick="sortInsiderTable('ema200')">200 EMA</th>
                     </tr></thead><tbody id="insiderResultsBody"></tbody></table>
                 </div>
                 <div id="insiderEmptyState" class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p>No insider trades yet. Click "Scan Gmail Now" or wait for automatic daily import.</p></div>
@@ -520,6 +522,10 @@
             if (result && !result.error) grokCache[ticker] = result;
             return result;
         }
+        async function get200EMA(ticker) {
+            const result = await apiCall('get200EMA', { ticker });
+            return result.ema200Status || null; // returns 'above', 'below', or null
+        }
 
         async function loadFromGoogleSheets() {
             try {
@@ -530,11 +536,12 @@
                     const rows = data.values || [];
                     const dataRows = rows.length > 0 && rows[0][0] === 'id' ? rows.slice(1) : rows;
                     if (dataRows.length > 0) {
-                        parsedData = dataRows.map(row => ({ id: parseInt(row[0]) || ++rowIdCounter, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', price: parseFloat(row[4]) || 0, currentPrice: row[5] ? (row[5] === 'manual' ? 'manual' : parseFloat(row[5])) : null, companyInfo: null }));
+                        parsedData = dataRows.map(row => ({ id: parseInt(row[0]) || ++rowIdCounter, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', price: parseFloat(row[4]) || 0, currentPrice: row[5] ? (row[5] === 'manual' ? 'manual' : parseFloat(row[5])) : null, ema200Status: row[6] || null, companyInfo: null }));
                         rowIdCounter = Math.max(...parsedData.map(d => d.id), 0);
                         renderTable();
                         showStatus(`Loaded ${parsedData.length} rows`, 'success');
                         fetchCurrentPrices(parsedData.filter(item => item.currentPrice === null));
+                        fetch200EMAStatus(parsedData.filter(item => item.ema200Status === null));
                         startDipAiAnalysis();
                     } else { renderTable(); showStatus('Ready', 'info'); }
                 }
@@ -542,8 +549,8 @@
         }
 
         async function saveToGoogleSheets() {
-            const header = ['id', 'date', 'ticker', 'companyName', 'price', 'currentPrice'];
-            const rows = parsedData.map(item => [item.id, item.date, item.ticker, item.companyName, item.price, item.currentPrice === null ? '' : item.currentPrice]);
+            const header = ['id', 'date', 'ticker', 'companyName', 'price', 'currentPrice', 'ema200Status'];
+            const rows = parsedData.map(item => [item.id, item.date, item.ticker, item.companyName, item.price, item.currentPrice === null ? '' : item.currentPrice, item.ema200Status || '']);
             await apiCall('saveStockData', { data: [header, ...rows] });
         }
         let saveTimeout = null;
@@ -552,6 +559,17 @@
         async function fetchCurrentPrices(items) {
             if (!items || items.length === 0) return;
             for (const item of items) { const price = await getStockPrice(item.ticker); item.currentPrice = price || 'manual'; renderTable(); await new Promise(r => setTimeout(r, 150)); }
+            autoSave();
+        }
+
+        async function fetch200EMAStatus(items) {
+            if (!items || items.length === 0) return;
+            for (const item of items) {
+                const status = await get200EMA(item.ticker);
+                item.ema200Status = status || 'unknown';
+                renderTable();
+                await new Promise(r => setTimeout(r, 150));
+            }
             autoSave();
         }
 
@@ -676,7 +694,7 @@
                 if (cleanTicker.startsWith('M') && cleanTicker.length > 1) { const withoutM = cleanTicker.substring(1); if (set2Tickers.has(withoutM)) cleanTicker = withoutM; }
                 if ((set2Tickers.has(cleanTicker) || set2Tickers.has('M' + cleanTicker)) && !addedTickers.has(cleanTicker)) {
                     addedTickers.add(cleanTicker);
-                    commonItems.push({ ticker: cleanTicker, companyName: item.companyName, price: item.price, date: selectedDate, id: ++rowIdCounter, currentPrice: null });
+                    commonItems.push({ ticker: cleanTicker, companyName: item.companyName, price: item.price, date: selectedDate, id: ++rowIdCounter, currentPrice: null, ema200Status: null, companyInfo: null });
                 }
             }
             if (commonItems.length === 0) { showStatus('No common tickers', 'error'); return; }
@@ -684,7 +702,7 @@
             document.getElementById('dataset1').value = '';
             document.getElementById('dataset2').value = '';
             showStatus(`Found ${commonItems.length} ticker(s)`, 'success');
-            renderTable(); fetchCurrentPrices(commonItems); autoSave();
+            renderTable(); fetchCurrentPrices(commonItems); fetch200EMAStatus(commonItems); autoSave();
             runBackgroundAiAnalysis(commonItems, 'dip');
         }
 
@@ -757,8 +775,23 @@
                 const matchBadge = hasInsiderMatch ? '<span class="insider-match" title="Also in Insider Tracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
                 const hasAiAnalysis = item.companyInfo || grokCache[item.ticker.toUpperCase()];
                 const aiBadge = hasAiAnalysis ? '<span class="ai-done-badge" title="AI Analysis Ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AI</span>' : '';
-                let html = `<tr style="background-color: ${rowColor};"><td>${index + 1}</td><td><input type="date" class="date-input" value="${item.date}" onchange="updateDate(${item.id}, this.value)"></td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleCompanyInfo(${item.id})">${item.ticker}${matchBadge}${aiBadge}</td><td>${item.companyName}</td><td class="price-cell">$${item.price.toFixed(2)}</td><td class="price-cell ${currentPriceClass}">${currentPriceText}</td><td class="${changeClass}">${changeText}</td><td><button class="btn-remove" onclick="removeRow(${item.id})">✕</button></td></tr>`;
-                if (isExpanded) html += `<tr class="company-info-row" style="background-color: ${rowColor};"><td colspan="8"><div class="company-info-content">${item.companyInfo ? renderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
+
+                // 200 EMA Status
+                let ema200Text = '', ema200Class = '';
+                if (item.ema200Status === null || item.ema200Status === 'unknown') {
+                    ema200Text = '<span class="loading"></span>';
+                } else if (item.ema200Status === 'above') {
+                    ema200Class = 'price-positive';
+                    ema200Text = 'Above';
+                } else if (item.ema200Status === 'below') {
+                    ema200Class = 'price-negative';
+                    ema200Text = 'Below';
+                } else {
+                    ema200Text = '—';
+                }
+
+                let html = `<tr style="background-color: ${rowColor};"><td>${index + 1}</td><td><input type="date" class="date-input" value="${item.date}" onchange="updateDate(${item.id}, this.value)"></td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleCompanyInfo(${item.id})">${item.ticker}${matchBadge}${aiBadge}</td><td>${item.companyName}</td><td class="price-cell">$${item.price.toFixed(2)}</td><td class="price-cell ${currentPriceClass}">${currentPriceText}</td><td class="${changeClass}">${changeText}</td><td class="${ema200Class}">${ema200Text}</td><td><button class="btn-remove" onclick="removeRow(${item.id})">✕</button></td></tr>`;
+                if (isExpanded) html += `<tr class="company-info-row" style="background-color: ${rowColor};"><td colspan="9"><div class="company-info-content">${item.companyInfo ? renderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
                 return html;
             }).join('');
         }
@@ -827,8 +860,8 @@
         function updateCurrentPrice(id, newPrice) { const item = parsedData.find(d => d.id === id); if (item && newPrice) { item.currentPrice = parseFloat(newPrice); renderTable(); autoSave(); } }
         function removeRow(id) { parsedData = parsedData.filter(d => d.id !== id); if (currentExpandedId === id) currentExpandedId = null; renderTable(); showStatus('Removed', 'info'); autoSave(); }
         function clearAll() { if (parsedData.length === 0) { showStatus('Nothing to clear', 'error'); return; } if (confirm('Clear all data?')) { parsedData = []; currentExpandedId = null; renderTable(); showStatus('Cleared', 'info'); autoSave(); } }
-        function refreshPrices() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } showStatus('Refreshing...', 'info'); parsedData.forEach(item => item.currentPrice = null); renderTable(); fetchCurrentPrices(parsedData); }
-        function exportToCSV() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } const headers = ['#', 'Date', 'Ticker', 'Company', 'Price', 'Current', '% Change', 'Insider Match']; const sortedData = getSortedData(parsedData, dipSortColumn, dipSortDirection); const rows = sortedData.map((item, i) => { const change = calculateChange(item.price, item.currentPrice); const hasMatch = insiderTickerSet.has(item.ticker.toUpperCase()) ? 'Yes' : 'No'; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, item.price, item.currentPrice || '', change ? change.toFixed(2) + '%' : '', hasMatch].join(','); }); downloadCSV([headers.join(','), ...rows].join('\n'), 'dip_tracker'); }
+        function refreshPrices() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } showStatus('Refreshing...', 'info'); parsedData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderTable(); fetchCurrentPrices(parsedData); fetch200EMAStatus(parsedData); }
+        function exportToCSV() { if (parsedData.length === 0) { showStatus('No data', 'error'); return; } const headers = ['#', 'Date', 'Ticker', 'Company', 'Price', 'Current', '% Change', '200 EMA', 'Insider Match']; const sortedData = getSortedData(parsedData, dipSortColumn, dipSortDirection); const rows = sortedData.map((item, i) => { const change = calculateChange(item.price, item.currentPrice); const hasMatch = insiderTickerSet.has(item.ticker.toUpperCase()) ? 'Yes' : 'No'; const ema200 = item.ema200Status === 'above' ? 'Above' : item.ema200Status === 'below' ? 'Below' : '—'; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, item.price, item.currentPrice || '', change ? change.toFixed(2) + '%' : '', ema200, hasMatch].join(','); }); downloadCSV([headers.join(','), ...rows].join('\n'), 'dip_tracker'); }
         function downloadCSV(csv, name) { const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${name}_${new Date().toISOString().split('T')[0]}.csv`; link.click(); showStatus('Exported', 'success'); }
 
         async function loadInsiderData() {
@@ -840,12 +873,13 @@
                     const rows = data.values || [];
                     const dataRows = rows.length > 0 && rows[0][0] === 'id' ? rows.slice(1) : rows;
                     if (dataRows.length > 0) {
-                        insiderData = dataRows.map(row => ({ id: parseInt(row[0]) || 0, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', news: row[4] || '', insider: row[5] || '', amount: row[6] || '', alertPrice: row[7] ? parseFloat(row[7]) : null, currentPrice: row[8] ? parseFloat(row[8]) : null, companyInfo: null }));
+                        insiderData = dataRows.map(row => ({ id: parseInt(row[0]) || 0, date: row[1] || '', ticker: row[2] || '', companyName: row[3] || '', news: row[4] || '', insider: row[5] || '', amount: row[6] || '', alertPrice: row[7] ? parseFloat(row[7]) : null, currentPrice: row[8] ? parseFloat(row[8]) : null, ema200Status: row[9] || null, companyInfo: null }));
                         insiderTickerSet.clear();
                         insiderData.forEach(item => insiderTickerSet.add(item.ticker.toUpperCase()));
                         renderInsiderTable();
                         showInsiderStatus(`Loaded ${insiderData.length} trades`, 'success');
                         fetchInsiderPrices();
+                        fetchInsider200EMAStatus(insiderData.filter(item => item.ema200Status === null));
                         startInsiderAiAnalysis();
                     } else { renderInsiderTable(); showInsiderStatus('No trades yet', 'info'); }
                 }
@@ -858,7 +892,17 @@
             }
         }
 
-        function refreshInsiderPrices() { if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; } showInsiderStatus('Refreshing...', 'info'); insiderData.forEach(item => item.currentPrice = null); renderInsiderTable(); fetchInsiderPrices(); }
+        async function fetchInsider200EMAStatus(items) {
+            if (!items || items.length === 0) return;
+            for (const item of items) {
+                const status = await get200EMA(item.ticker);
+                item.ema200Status = status || 'unknown';
+                renderInsiderTable();
+                await new Promise(r => setTimeout(r, 150));
+            }
+        }
+
+        function refreshInsiderPrices() { if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; } showInsiderStatus('Refreshing...', 'info'); insiderData.forEach(item => { item.currentPrice = null; item.ema200Status = null; }); renderInsiderTable(); fetchInsiderPrices(); fetchInsider200EMAStatus(insiderData); }
 
         async function triggerInsiderGmailScan() {
             showInsiderStatus('Scanning Gmail for new insider alerts…', 'info');
@@ -926,17 +970,32 @@
                 const isExpanded = currentExpandedInsiderId === item.id;
                 const hasAiAnalysis = item.companyInfo || grokCache[item.ticker.toUpperCase()];
                 const aiBadge = hasAiAnalysis ? '<span class="ai-done-badge" title="AI Analysis Ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AI</span>' : '';
-                let html = `<tr><td>${index + 1}</td><td>${item.date}</td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}${aiBadge}</td><td>${item.companyName}</td><td class="news-cell">${item.news}</td><td>${item.insider ? `<span class="insider-badge">${item.insider}</span>` : '—'}</td><td class="amount-cell">${item.amount || '—'}</td><td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td><td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td><td class="${changeClass}">${changeText}</td></tr>`;
-                if (isExpanded) html += `<tr class="company-info-row"><td colspan="10"><div class="company-info-content">${item.companyInfo ? renderInsiderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
+
+                // 200 EMA Status
+                let ema200Text = '', ema200Class = '';
+                if (item.ema200Status === null || item.ema200Status === 'unknown') {
+                    ema200Text = '<span class="loading"></span>';
+                } else if (item.ema200Status === 'above') {
+                    ema200Class = 'price-positive';
+                    ema200Text = 'Above';
+                } else if (item.ema200Status === 'below') {
+                    ema200Class = 'price-negative';
+                    ema200Text = 'Below';
+                } else {
+                    ema200Text = '—';
+                }
+
+                let html = `<tr><td>${index + 1}</td><td>${item.date}</td><td class="ticker-cell ${isExpanded ? 'expanded' : ''}" onclick="toggleInsiderCompanyInfo(${item.id})">${item.ticker}${aiBadge}</td><td>${item.companyName}</td><td class="news-cell">${item.news}</td><td>${item.insider ? `<span class="insider-badge">${item.insider}</span>` : '—'}</td><td class="amount-cell">${item.amount || '—'}</td><td class="price-cell">${item.alertPrice ? '$' + item.alertPrice.toFixed(2) : '—'}</td><td class="price-cell ${currentPriceClass}">${item.currentPrice ? '$' + item.currentPrice.toFixed(2) : '<span class="loading"></span>'}</td><td class="${changeClass}">${changeText}</td><td class="${ema200Class}">${ema200Text}</td></tr>`;
+                if (isExpanded) html += `<tr class="company-info-row"><td colspan="11"><div class="company-info-content">${item.companyInfo ? renderInsiderCompanyInfo(item) : '<div class="company-info-loading"><span class="loading"></span> Loading AI analysis...</div>'}</div></td></tr>`;
                 return html;
             }).join('');
         }
 
         function exportInsiderCSV() {
             if (insiderData.length === 0) { showInsiderStatus('No data', 'error'); return; }
-            const headers = ['#', 'Date', 'Ticker', 'Company', 'News', 'Insider', 'Amount', 'Alert Price', 'Current', '% Change'];
+            const headers = ['#', 'Date', 'Ticker', 'Company', 'News', 'Insider', 'Amount', 'Alert Price', 'Current', '% Change', '200 EMA'];
             const sortedData = getSortedData(insiderData, insiderSortColumn, insiderSortDirection, true);
-            const rows = sortedData.map((item, i) => { const change = item.alertPrice && item.currentPrice ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100 : null; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, `"${item.news}"`, item.insider, item.amount, item.alertPrice || '', item.currentPrice || '', change ? change.toFixed(2) + '%' : ''].join(','); });
+            const rows = sortedData.map((item, i) => { const change = item.alertPrice && item.currentPrice ? ((item.currentPrice - item.alertPrice) / item.alertPrice) * 100 : null; const ema200 = item.ema200Status === 'above' ? 'Above' : item.ema200Status === 'below' ? 'Below' : '—'; return [i + 1, item.date, item.ticker, `"${item.companyName}"`, `"${item.news}"`, item.insider, item.amount, item.alertPrice || '', item.currentPrice || '', change ? change.toFixed(2) + '%' : '', ema200].join(','); });
             downloadCSV([headers.join(','), ...rows].join('\n'), 'insider_trades');
         }
     </script>
