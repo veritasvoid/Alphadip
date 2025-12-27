@@ -1,0 +1,49 @@
+# Alphadip Tracker - Git Ignore File
+
+# Sensitive Configuration Files
+# CRITICAL: Never commit actual API credentials
+config.js
+
+# Backup files
+backups/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies (if you add a build process later)
+node_modules/
+vendor/
+
+# Build outputs (for future use)
+dist/
+build/
+*.min.js
+*.min.css
+
+# Temporary files
+tmp/
+temp/
+*.tmp

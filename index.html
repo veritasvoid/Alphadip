@@ -423,10 +423,33 @@
         </div>
     </div>
 
+    <!-- Load configuration from external file -->
+    <script src="config.js"></script>
     <script>
-        const GOOGLE_SHEETS_ID = '19WB8SI3DBXKIeqyfGn2W2ihRLdI6_F5C0dhEucYSoNs';
-        const GOOGLE_API_KEY = 'AIzaSyDzZYtdzU74EaBpYjo-e3kDdMaHmnN-2Uw';
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUWr5tAmIpil3jb8n44nnbdlNoeLk0qMuqZrQO8uxJa2ANdOloe7aaBuVKz7QkJa7p/exec';
+        // Configuration validation
+        if (!window.ALPHADIP_CONFIG) {
+            alert('ERROR: Configuration file not loaded!\n\nPlease copy config.example.js to config.js and add your credentials.\nSee README.md for setup instructions.');
+            throw new Error('Missing configuration file');
+        }
+
+        // Load configuration from external config file (see config.js)
+        const GOOGLE_SHEETS_ID = window.ALPHADIP_CONFIG.GOOGLE_SHEETS_ID;
+        const GOOGLE_API_KEY = window.ALPHADIP_CONFIG.GOOGLE_API_KEY;
+        const APPS_SCRIPT_URL = window.ALPHADIP_CONFIG.APPS_SCRIPT_URL;
+
+        // Validate configuration
+        if (!GOOGLE_SHEETS_ID || GOOGLE_SHEETS_ID.includes('YOUR_')) {
+            alert('ERROR: Please configure your Google Sheets ID in config.js');
+            throw new Error('Invalid Google Sheets ID');
+        }
+        if (!GOOGLE_API_KEY || GOOGLE_API_KEY.includes('YOUR_')) {
+            alert('ERROR: Please configure your Google API Key in config.js');
+            throw new Error('Invalid Google API Key');
+        }
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) {
+            alert('ERROR: Please configure your Apps Script URL in config.js');
+            throw new Error('Invalid Apps Script URL');
+        }
 
         let grokCache = {}, currentExpandedId = null, currentExpandedInsiderId = null;
         let aiAnalysisQueue = [], isAnalyzing = false;
